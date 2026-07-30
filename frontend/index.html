@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cofre Digital de Documentos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <h1>🔒 Cofre Digital de Documentos</h1>
+        <p class="subtitle">Gerenciamento seguro de documentos com Amazon S3</p>
+    </header>
+
+    <main class="container">
+        <!-- Seção de Upload -->
+        <section class="section" id="upload-section">
+            <h2>📤 Enviar Documento</h2>
+            <form id="upload-form" class="upload-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="doc-name">Nome do documento</label>
+                        <input type="text" id="doc-name" placeholder="Ex: Contrato de locação" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="doc-type">Tipo do documento</label>
+                        <select id="doc-type" required>
+                            <option value="">Selecione...</option>
+                            <option value="contratos">Contrato</option>
+                            <option value="notas-fiscais">Nota fiscal</option>
+                            <option value="relatorios">Relatório</option>
+                            <option value="comprovantes">Comprovante</option>
+                            <option value="outros">Outro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="doc-description">Descrição</label>
+                    <input type="text" id="doc-description" placeholder="Breve descrição do documento">
+                </div>
+                <div class="form-group">
+                    <label for="doc-file">Arquivo</label>
+                    <input type="file" id="doc-file" accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.txt" required>
+                    <small class="hint">Formatos aceitos: PDF, PNG, JPG, JPEG, CSV, XLSX, TXT (máx. 20MB)</small>
+                </div>
+                <div id="file-info" class="file-info hidden"></div>
+                <div id="progress-container" class="progress-container hidden">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <span id="progress-text">0%</span>
+                </div>
+                <button type="submit" id="btn-upload" class="btn btn-primary">Enviar documento</button>
+                <div id="upload-message" class="message hidden"></div>
+            </form>
+        </section>
+
+        <!-- Seção de Documentos -->
+        <section class="section" id="documents-section">
+            <h2>📋 Documentos Armazenados</h2>
+            <div class="filter-row">
+                <select id="filter-category" class="filter-select">
+                    <option value="">Todas as categorias</option>
+                    <option value="contratos">Contratos</option>
+                    <option value="notas-fiscais">Notas Fiscais</option>
+                    <option value="relatorios">Relatórios</option>
+                    <option value="comprovantes">Comprovantes</option>
+                    <option value="outros">Outros</option>
+                </select>
+                <button id="btn-refresh" class="btn btn-secondary">🔄 Atualizar</button>
+            </div>
+            <div class="table-container">
+                <table id="documents-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Tamanho</th>
+                            <th>Classe</th>
+                            <th>Última modificação</th>
+                            <th>Restauração</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documents-body">
+                        <tr><td colspan="7" class="empty-state">Carregando documentos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination" class="pagination hidden">
+                <button id="btn-next-page" class="btn btn-secondary">Carregar mais</button>
+            </div>
+        </section>
+
+        <!-- Seção de Versões -->
+        <section class="section hidden" id="versions-section">
+            <h2>📂 Versões do Documento</h2>
+            <p id="versions-doc-name" class="versions-title"></p>
+            <button id="btn-close-versions" class="btn btn-secondary">← Voltar</button>
+            <table id="versions-table">
+                <thead>
+                    <tr>
+                        <th>Version ID</th>
+                        <th>Data</th>
+                        <th>Tamanho</th>
+                        <th>Status</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="versions-body"></tbody>
+            </table>
+        </section>
+
+        <!-- Seção Educacional -->
+        <section class="section" id="educational-section">
+            <h2>📚 Classes de Armazenamento S3</h2>
+            <div class="cards-grid">
+                <div class="card card-standard">
+                    <h3>S3 Standard</h3>
+                    <p>Acesso frequente com baixa latência. Ideal para documentos ativos que são acessados regularmente. Sem tempo mínimo de armazenamento.</p>
+                    <span class="badge">Acesso frequente</span>
+                </div>
+                <div class="card card-intelligent">
+                    <h3>S3 Intelligent-Tiering</h3>
+                    <p>Move objetos automaticamente entre níveis de acesso conforme o padrão de uso. Taxa de monitoramento por objeto. Ideal para padrões de acesso imprevisíveis.</p>
+                    <span class="badge">Otimização automática</span>
+                </div>
+                <div class="card card-glacier">
+                    <h3>Glacier Flexible Retrieval</h3>
+                    <p>Arquivamento com custo baixo. Requer restauração antes do download. Opções: Expedited (1-5min), Standard (3-5h), Bulk (5-12h). Mínimo 90 dias.</p>
+                    <span class="badge">Arquivamento</span>
+                </div>
+                <div class="card card-deep">
+                    <h3>Glacier Deep Archive</h3>
+                    <p>Menor custo de armazenamento. Recuperação lenta: Standard (12h) ou Bulk (48h). Mínimo 180 dias. Para documentos raramente acessados.</p>
+                    <span class="badge">Longo prazo</span>
+                </div>
+                <div class="card card-versioning">
+                    <h3>Versionamento</h3>
+                    <p>Mantém todas as versões de um objeto. Permite recuperar versões anteriores. Delete markers indicam exclusão lógica. Essencial para compliance.</p>
+                    <span class="badge">Histórico</span>
+                </div>
+                <div class="card card-lifecycle">
+                    <h3>Lifecycle Rules</h3>
+                    <p>Regras automáticas que transitam objetos entre classes ou os expiram. Processamento assíncrono (não instantâneo). Baseado na idade do objeto.</p>
+                    <span class="badge">Automação</span>
+                </div>
+                <div class="card card-presigned">
+                    <h3>URLs Pré-assinadas</h3>
+                    <p>URLs temporárias que permitem upload ou download sem expor credenciais. Expiram após tempo configurado. O arquivo vai direto ao S3 sem passar pelo servidor.</p>
+                    <span class="badge">Segurança</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Projeto educacional — Cofre Digital de Documentos com Amazon S3</p>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

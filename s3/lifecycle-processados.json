@@ -1,0 +1,31 @@
+{
+    "Rules": [
+        {
+            "ID": "arquivar-documentos-processados",
+            "Status": "Enabled",
+            "Filter": {
+                "And": {
+                    "Prefix": "processados/",
+                    "ObjectSizeGreaterThan": 131072
+                }
+            },
+            "Transitions": [
+                {
+                    "Days": 30,
+                    "StorageClass": "INTELLIGENT_TIERING"
+                },
+                {
+                    "Days": 180,
+                    "StorageClass": "GLACIER"
+                },
+                {
+                    "Days": 365,
+                    "StorageClass": "DEEP_ARCHIVE"
+                }
+            ],
+            "Expiration": {
+                "Days": 730
+            }
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "Rules": [
+        {
+            "ID": "excluir-arquivos-temporarios",
+            "Status": "Enabled",
+            "Filter": {
+                "Prefix": "temporarios/"
+            },
+            "Expiration": {
+                "Days": 7
+            },
+            "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 7
+            },
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1
+            }
+        }
+    ]
+}

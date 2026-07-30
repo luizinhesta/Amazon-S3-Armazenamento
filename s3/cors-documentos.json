@@ -1,0 +1,20 @@
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "GET",
+            "HEAD"
+        ],
+        "AllowedOrigins": [
+            "https://<DOMINIO_CLOUDFRONT>"
+        ],
+        "ExposeHeaders": [
+            "ETag",
+            "x-amz-version-id"
+        ],
+        "MaxAgeSeconds": 3000
+    }
+]

@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribuição / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Ambientes virtuais
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testes e cobertura
+.coverage
+htmlcov/
+.pytest_cache/
+.hypothesis/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# Pacotes Lambda (zips gerados)
+*.zip
+
+# Arquivos temporários
+tmp/
+temp/

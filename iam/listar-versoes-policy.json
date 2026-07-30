@@ -1,0 +1,32 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowListBucketVersions",
+            "Effect": "Allow",
+            "Action": "s3:ListBucketVersions",
+            "Resource": "arn:aws:s3:::<BUCKET_DOCUMENTOS>",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": "processados/*"
+                }
+            }
+        },
+        {
+            "Sid": "AllowGetObjectVersions",
+            "Effect": "Allow",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::<BUCKET_DOCUMENTOS>/processados/*"
+        },
+        {
+            "Sid": "AllowCloudWatchLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "arn:aws:logs:<AWS_REGION>:<AWS_ACCOUNT_ID>:log-group:/aws/lambda/cofre-listar-versoes:*"
+        }
+    ]
+}

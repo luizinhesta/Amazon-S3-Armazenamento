@@ -1,0 +1,30 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /upload-url",
+  "rawPath": "/upload-url",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json",
+    "origin": "https://d123456abcdef.cloudfront.net"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "api-id.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "api-id",
+    "http": {
+      "method": "POST",
+      "path": "/upload-url",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "req-id-123",
+    "routeKey": "POST /upload-url",
+    "stage": "$default",
+    "time": "30/Jul/2026:14:00:00 +0000",
+    "timeEpoch": 1785535200000
+  },
+  "body": "{\"filename\": \"contrato-locacao.pdf\", \"category\": \"contratos\", \"contentType\": \"application/pdf\", \"documentName\": \"Contrato de Locação\", \"documentType\": \"contrato\", \"description\": \"Contrato anual de locação do escritório\", \"fileSize\": 1048576}",
+  "isBase64Encoded": false
+}

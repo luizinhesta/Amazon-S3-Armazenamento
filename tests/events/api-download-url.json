@@ -1,0 +1,31 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /download-url",
+  "rawPath": "/download-url",
+  "rawQueryString": "key=processados/contratos/contrato-locacao.pdf",
+  "headers": {
+    "origin": "https://d123456abcdef.cloudfront.net"
+  },
+  "queryStringParameters": {
+    "key": "processados/contratos/contrato-locacao.pdf"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "api-id.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "api-id",
+    "http": {
+      "method": "GET",
+      "path": "/download-url",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "req-id-456",
+    "routeKey": "GET /download-url",
+    "stage": "$default",
+    "time": "30/Jul/2026:14:05:00 +0000",
+    "timeEpoch": 1785535500000
+  },
+  "isBase64Encoded": false
+}

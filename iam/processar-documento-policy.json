@@ -1,0 +1,43 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowReadEntrada",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectTagging",
+                "s3:DeleteObject"
+            ],
+            "Resource": "arn:aws:s3:::<BUCKET_DOCUMENTOS>/entrada/*"
+        },
+        {
+            "Sid": "AllowWriteProcessados",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectTagging"
+            ],
+            "Resource": "arn:aws:s3:::<BUCKET_DOCUMENTOS>/processados/*"
+        },
+        {
+            "Sid": "AllowWriteRejeitados",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectTagging"
+            ],
+            "Resource": "arn:aws:s3:::<BUCKET_DOCUMENTOS>/rejeitados/*"
+        },
+        {
+            "Sid": "AllowCloudWatchLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "arn:aws:logs:<AWS_REGION>:<AWS_ACCOUNT_ID>:log-group:/aws/lambda/cofre-processar-documento:*"
+        }
+    ]
+}

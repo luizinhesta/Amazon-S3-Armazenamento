@@ -1,0 +1,30 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /restaurar",
+  "rawPath": "/restaurar",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json",
+    "origin": "https://d123456abcdef.cloudfront.net"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "api-id.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "api-id",
+    "http": {
+      "method": "POST",
+      "path": "/restaurar",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "Mozilla/5.0"
+    },
+    "requestId": "req-id-101",
+    "routeKey": "POST /restaurar",
+    "stage": "$default",
+    "time": "30/Jul/2026:14:15:00 +0000",
+    "timeEpoch": 1785536100000
+  },
+  "body": "{\"key\": \"processados/contratos/contrato-locacao.pdf\", \"tier\": \"Standard\", \"days\": 2}",
+  "isBase64Encoded": false
+}

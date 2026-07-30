@@ -1,0 +1,15 @@
+{
+    "Rules": [
+        {
+            "ID": "limpar-versoes-antigas",
+            "Status": "Enabled",
+            "Filter": {
+                "Prefix": "processados/"
+            },
+            "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 90
+            },
+            "ExpiredObjectDeleteMarker": true
+        }
+    ]
+}
