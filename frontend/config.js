@@ -8,5 +8,5 @@
  * Exemplo: https://abc123def.execute-api.us-east-1.amazonaws.com
  */
 window.APP_CONFIG = {
-    API_BASE_URL: "COLE_AQUI_A_URL_DA_API"
+    API_BASE_URL: "https://zbdeg2slj7.execute-api.us-east-1.amazonaws.com"
 };
