@@ -14,7 +14,10 @@ def build_upload_key(prefix, category, filename):
     """
     Constrói a chave S3 para upload de um documento no prefixo de entrada.
 
-    Formato: {prefix}/{category}/{uuid}_{filename}
+    Formato: {prefix}/{category}/{filename}
+
+    Usa o nome original do arquivo para permitir que o versionamento do S3
+    funcione corretamente — uploads do mesmo arquivo geram novas versões.
 
     Args:
         prefix: Prefixo base (ex: 'entrada')
@@ -24,10 +27,7 @@ def build_upload_key(prefix, category, filename):
     Returns:
         String com a chave completa do objeto no S3.
     """
-    # Gera UUID para evitar colisões de nome
-    unique_id = uuid.uuid4().hex[:8]
-    safe_filename = f"{unique_id}_{filename}"
-    return f"{prefix}/{category}/{safe_filename}"
+    return f"{prefix}/{category}/{filename}"
 
 
 def build_processed_key(source_key, processed_prefix):

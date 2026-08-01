@@ -1,16 +1,16 @@
-# 🔐 Lab S3 — Cofre Digital de Documentos com Amazon S3
+# 🔐 Cofre Digital de Arquivos com Amazon S3
 
 ## Descrição
 
-O **Lab S3 — Cofre Digital de Documentos** é um projeto educacional (laboratório prático) que ensina as principais funcionalidades do Amazon S3 de forma hands-on. O sistema permite upload, gerenciamento, download, versionamento e arquivamento de documentos em um bucket S3 privado, utilizando URLs pré-assinadas para acesso seguro sem exposição de credenciais.
+O **Cofre Digital de Arquivos** é um sistema serverless para upload, gerenciamento, download, versionamento e arquivamento de documentos em um bucket S3 privado, utilizando URLs pré-assinadas para acesso seguro sem exposição de credenciais.
 
-Toda a infraestrutura é criada **manualmente via Console AWS** — sem Terraform, CloudFormation, CDK ou SAM. O objetivo é que o estudante entenda cada recurso configurando campo a campo.
+Toda a infraestrutura é criada **manualmente via Console AWS** — sem Terraform, CloudFormation, CDK ou SAM. O guia de implantação orienta cada configuração campo a campo.
 
+
+![Objetivos](imagens/imagem(1).png)
 ---
 
-## 🎯 Objetivo
-
-Aprender na prática as funcionalidades do Amazon S3 e serviços relacionados, incluindo:
+## 🎯 Funcionalidades
 
 - Criação e configuração de buckets privados
 - Upload e download via URLs pré-assinadas (pre-signed URLs)
@@ -26,58 +26,7 @@ Aprender na prática as funcionalidades do Amazon S3 e serviços relacionados, i
 
 ## 🏗️ Arquitetura
 
-```mermaid
-graph TB
-    subgraph "Usuário"
-        Browser[Navegador]
-    end
-
-    subgraph "AWS Cloud"
-        CF[CloudFront]
-        S3F[S3 - Bucket Frontend]
-        APIGW[API Gateway HTTP API]
-
-        subgraph "Lambda Functions"
-            L1[gerar-url-upload]
-            L2[processar-documento]
-            L3[listar-documentos]
-            L4[gerar-url-download]
-            L5[listar-versoes]
-            L6[restaurar-documento]
-        end
-
-        S3D[S3 - Bucket Documentos]
-        CW[CloudWatch Logs]
-    end
-
-    Browser -->|HTTPS| CF
-    CF -->|OAC| S3F
-    Browser -->|API calls| APIGW
-    APIGW --> L1
-    APIGW --> L3
-    APIGW --> L4
-    APIGW --> L5
-    APIGW --> L6
-
-    Browser -->|Pre-signed PUT| S3D
-    Browser -->|Pre-signed GET| S3D
-
-    S3D -->|S3 Event| L2
-    L2 --> S3D
-
-    L1 --> S3D
-    L3 --> S3D
-    L4 --> S3D
-    L5 --> S3D
-    L6 --> S3D
-
-    L1 --> CW
-    L2 --> CW
-    L3 --> CW
-    L4 --> CW
-    L5 --> CW
-    L6 --> CW
-```
+![Objetivos](imagens/imagem(30).png)
 
 ---
 
@@ -114,11 +63,21 @@ sequenceDiagram
 
 1. O usuário seleciona um arquivo e uma categoria (contratos, notas-fiscais, relatórios, comprovantes, outros)
 2. O frontend solicita uma URL pré-assinada ao backend via API Gateway
+
+![Objetivos](imagens/imagem(37).png)
+![Objetivos](imagens/imagem(36).png)
+
+
 3. O Lambda valida a extensão (pdf, png, jpg, jpeg, csv, xlsx, txt), tamanho (máx. 20MB) e sanitiza o nome do arquivo
+
+![Objetivos](imagens/imagem(35).png)
+
 4. O S3 gera uma URL temporária (5 minutos) para upload direto
 5. O frontend envia o arquivo diretamente ao S3 usando a URL pré-assinada (PUT)
 6. O S3 dispara uma notificação de evento (ObjectCreated) para o Lambda de processamento
 7. O Lambda de processamento valida, adiciona tags e move o documento para o prefixo `processados/`
+
+![Objetivos](imagens/imagem(33).png)
 
 ---
 
@@ -133,11 +92,15 @@ sequenceDiagram
 | **AWS IAM** | Controle de acesso com políticas de privilégio mínimo |
 | **Amazon CloudWatch** | Logs e monitoramento das funções Lambda |
 
+![Objetivos](imagens/imagem(32).png)
+
+![Objetivos](imagens/imagem(31).png)
+
 ---
 
 ## 🗄️ Classes de Armazenamento S3
 
-O projeto utiliza diferentes classes de armazenamento para ensinar quando e por que usar cada uma:
+O projeto utiliza diferentes classes de armazenamento com transição automática via Lifecycle Rules:
 
 | Classe | Uso | Disponibilidade | Recuperação |
 |--------|-----|-----------------|-------------|
@@ -146,7 +109,7 @@ O projeto utiliza diferentes classes de armazenamento para ensinar quando e por 
 | **S3 Glacier Flexible Retrieval** | Arquivamento de longo prazo (após 180 dias) | 99,99% | Minutos a horas (conforme tier) |
 | **S3 Glacier Deep Archive** | Arquivamento raramente acessado (após 365 dias) | 99,99% | Até 12 horas |
 
-O prefixo `laboratorio/` contém subprefixos para cada classe, permitindo experimentar e observar comportamentos na prática.
+![Objetivos](imagens/imagem(34).png)
 
 ---
 
@@ -204,7 +167,7 @@ O frontend **nunca** possui credenciais AWS. Toda operação com S3 passa por UR
 ## 📁 Estrutura do Repositório
 
 ```
-cofre-digital-s3/
+cofre-digital-arquivos/
 ├── frontend/                    # Frontend estático (HTML/CSS/JS puro)
 │   ├── index.html              # Página principal
 │   ├── styles.css              # Estilos responsivos
@@ -239,94 +202,17 @@ cofre-digital-s3/
 ├── README.md                   # Este arquivo
 ├── ARQUITETURA.md              # Diagramas e decisões arquiteturais
 ├── IMPLANTACAO.md              # Passo a passo via Console AWS
-├── TESTES.md                   # Cenários de teste
-├── TROUBLESHOOTING.md          # Problemas comuns e soluções
-├── CUSTOS.md                   # Explicação de custos por serviço
-└── LIMPEZA.md                  # Ordem segura de exclusão de recursos
+└── LICENSE
 ```
 
 ---
 
 ## ✅ Pré-requisitos
 
-- **Conta AWS** ativa (Free Tier é suficiente para experimentação inicial)
+- **Conta AWS** ativa
 - **Conhecimento básico de AWS:** saber navegar no Console, entender conceitos de IAM e S3
 - **Navegador moderno** com suporte a JavaScript ES6+
 - **Editor de texto** para editar arquivos de configuração (config.js, políticas JSON)
-
----
-
-## 📚 Principais Aprendizados
-
-Ao completar este projeto, você terá praticado:
-
-1. **S3 como storage:** Criação de buckets, upload/download, organização por prefixos
-2. **Segurança:** Buckets privados, OAC, HTTPS enforçado, criptografia SSE-S3, CORS
-3. **URLs pré-assinadas:** Geração e uso de URLs temporárias para acesso controlado
-4. **Versionamento:** Manutenção de histórico de alterações em objetos
-5. **Classes de armazenamento:** Quando usar cada classe e como migrar entre elas
-6. **Lifecycle Rules:** Automação de transições e expiração de objetos
-7. **Restauração Glacier:** Processo de tornar objetos arquivados temporariamente disponíveis
-8. **Event Notifications:** Disparo automático de processamento ao criar objetos
-9. **Arquitetura serverless:** Integração S3 + Lambda + API Gateway + CloudFront
-10. **IAM:** Políticas de privilégio mínimo por função
-
----
-
-## 💰 Resumo de Custos
-
-Este projeto utiliza serviços com cobrança por uso. Para fins educacionais com volume baixo, os custos são mínimos (muitos serviços possuem Free Tier).
-
-Consulte as páginas oficiais de preços da AWS para valores atualizados:
-
-- [Amazon S3 Pricing](https://aws.amazon.com/s3/pricing/)
-- [AWS Lambda Pricing](https://aws.amazon.com/lambda/pricing/)
-- [Amazon API Gateway Pricing](https://aws.amazon.com/api-gateway/pricing/)
-- [Amazon CloudFront Pricing](https://aws.amazon.com/cloudfront/pricing/)
-- [Amazon CloudWatch Pricing](https://aws.amazon.com/cloudwatch/pricing/)
-
-Para uma análise detalhada de custos aplicada a este projeto, consulte o documento [CUSTOS.md](./CUSTOS.md).
-
----
-
-## ⚠️ Aviso Importante: Exclua os Recursos Após o Uso
-
-> **Não deixe recursos AWS criados indefinidamente.** Mesmo com volumes baixos, serviços como CloudFront, S3 (armazenamento) e CloudWatch (logs) podem gerar custos contínuos.
-
-Após concluir seus estudos e testes:
-
-1. Siga o guia de limpeza em [LIMPEZA.md](./LIMPEZA.md) para excluir os recursos na ordem correta
-2. Verifique o AWS Cost Explorer para confirmar que não há cobranças pendentes
-3. Configure alertas de billing na sua conta AWS como boa prática
-
----
-
-## 🧪 Como Provar que Está Funcionando
-
-Lista de evidências para validar que o projeto está corretamente implantado:
-
-### Bucket e Configuração
-- [ ] Bucket de documentos é **privado** (Block Public Access ativado)
-- [ ] Versionamento está **ativo** no bucket de documentos
-- [ ] Objetos possuem **Version ID** visível nas propriedades
-- [ ] Tags aplicadas corretamente nos objetos processados (tipo-arquivo, categoria, status)
-- [ ] Metadados salvos (ContentType, ServerSideEncryption)
-
-### Upload e Download
-- [ ] Upload funciona via URL pré-assinada (PUT retorna 200)
-- [ ] Download funciona via URL pré-assinada (GET retorna o arquivo)
-- [ ] Evento **ObjectCreated** é disparado ao criar objeto em `entrada/`
-- [ ] Logs do Lambda `processar-documento` aparecem no **CloudWatch**
-
-### Classes de Armazenamento e Lifecycle
-- [ ] Objetos no prefixo `laboratorio/` em cada classe de armazenamento (Standard, IT, Glacier, Deep Archive)
-- [ ] Regras de Lifecycle configuradas e visíveis no Console (Management tab)
-- [ ] Status de restauração (restore) visível para objetos Glacier
-
-### Frontend e Segurança
-- [ ] Distribuição **CloudFront** criada e servindo o frontend via HTTPS
-- [ ] **OAC** configurado (Origin Access Control) — bucket frontend sem acesso público direto
-- [ ] Nenhuma credencial AWS exposta no código frontend (apenas URL da API em config.js)
 
 ---
 
@@ -335,10 +221,6 @@ Lista de evidências para validar que o projeto está corretamente implantado:
 | Documento | Descrição |
 |-----------|-----------|
 | [IMPLANTACAO.md](./IMPLANTACAO.md) | Passo a passo completo de implantação via Console AWS |
-| [TESTES.md](./TESTES.md) | Cenários de teste para todas as funcionalidades |
-| [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Problemas comuns e soluções |
-| [CUSTOS.md](./CUSTOS.md) | Explicação detalhada de custos por serviço |
-| [LIMPEZA.md](./LIMPEZA.md) | Ordem segura de exclusão de recursos |
 | [ARQUITETURA.md](./ARQUITETURA.md) | Diagramas Mermaid e explicação de componentes |
 
 ---
@@ -348,5 +230,4 @@ Lista de evidências para validar que o projeto está corretamente implantado:
 - **Infraestrutura:** Criada 100% via Console AWS (sem IaC)
 - **Backend:** Python 3.12 com boto3 (AWS SDK)
 - **Frontend:** HTML, CSS e JavaScript puros (sem frameworks)
-- **Testes:** Cenários manuais documentados em TESTES.md
 - **Documentação:** Markdown com diagramas Mermaid

@@ -1,5 +1,5 @@
 /**
- * Configuração do Cofre Digital de Documentos.
+ * Configuração do Cofre Digital de Arquivos.
  * 
  * INSTRUÇÕES:
  * Substitua o valor de API_BASE_URL pela URL de invocação
@@ -8,5 +8,5 @@
  * Exemplo: https://abc123def.execute-api.us-east-1.amazonaws.com
  */
 window.APP_CONFIG = {
-    API_BASE_URL: "https://zbdeg2slj7.execute-api.us-east-1.amazonaws.com"
+    API_BASE_URL: "https://<API_GATEWAY_URL>"
 };

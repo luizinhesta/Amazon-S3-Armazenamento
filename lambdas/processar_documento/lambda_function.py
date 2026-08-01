@@ -26,9 +26,12 @@ from datetime import datetime, timezone
 import boto3
 from botocore.exceptions import ClientError
 
-# Importa módulos compartilhados
+# Garante que o diretório da Lambda esteja no path para imports
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+LAMBDA_DIR = os.path.dirname(os.path.abspath(__file__))
+if LAMBDA_DIR not in sys.path:
+    sys.path.insert(0, LAMBDA_DIR)
+
 from shared.validation import validate_extension, ALLOWED_EXTENSIONS
 from shared.key_builder import (
     build_processed_key,

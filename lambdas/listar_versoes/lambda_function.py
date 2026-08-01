@@ -11,14 +11,18 @@ Variáveis de ambiente:
 """
 
 import os
+import sys
 import logging
 
 import boto3
 from botocore.exceptions import ClientError
 
-# Importa módulos compartilhados
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# Garante que o diretório da Lambda esteja no path para imports
+# (necessário quando shared/ está no mesmo nível que lambda_function.py)
+LAMBDA_DIR = os.path.dirname(os.path.abspath(__file__))
+if LAMBDA_DIR not in sys.path:
+    sys.path.insert(0, LAMBDA_DIR)
+
 from shared.response import success_response, error_response, parse_query_params
 from shared.key_builder import is_in_prefix
 

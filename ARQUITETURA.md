@@ -1,6 +1,6 @@
-# Arquitetura — Cofre Digital de Documentos com Amazon S3
+# Arquitetura — Cofre Digital de Arquivos com Amazon S3
 
-Este documento detalha a arquitetura do Cofre Digital, incluindo diagramas de infraestrutura, fluxos de dados, decisões de segurança e explicação de cada componente AWS utilizado.
+Este documento detalha a arquitetura do Cofre Digital de Arquivos, incluindo diagramas de infraestrutura, fluxos de dados, decisões de segurança e explicação de cada componente AWS utilizado.
 
 > **Nota:** Toda a infraestrutura é criada manualmente via Console AWS. Este documento serve como referência visual e conceitual para entender como os serviços se conectam.
 
@@ -497,7 +497,7 @@ OAC é a recomendação atual da AWS, substituindo OAI. Oferece suporte a SSE-KM
 - Ponto de entrada para todas as operações do backend
 - Roteia requisições para a Lambda correta
 - Gerencia CORS automaticamente
-- Não requer autenticação (projeto educacional)
+- Não requer autenticação (pode ser adicionada posteriormente)
 
 **Rotas configuradas:**
 
@@ -513,7 +513,7 @@ OAC é a recomendação atual da AWS, substituindo OAI. Oferece suporte a SSE-KM
 - **Tipo:** HTTP API (v2) — mais leve que REST API
 - **Payload Format Version:** 2.0 — formato simplificado do evento Lambda
 - **Stage:** `$default` com auto-deploy habilitado
-- **CORS:** Origin = `https://{cloudfront-domain}`, Methods = GET/POST/OPTIONS
+- **CORS:** Origin = `https://<DOMINIO_CLOUDFRONT>`, Methods = GET/POST/OPTIONS
 
 ---
 
@@ -632,12 +632,12 @@ OAC é a recomendação atual da AWS, substituindo OAI. Oferece suporte a SSE-KM
 | `processados/` | Documentos validados e classificados | Standard→IT→Glacier→Deep→Expira | processar-documento | listar-documentos, gerar-url-download |
 | `processados/{categoria}/` | Subcategorias processadas | Mesma regra do pai | processar-documento | listar-documentos |
 | `rejeitados/` | Documentos com extensão inválida | — | processar-documento | (admin manual) |
-| `temporarios/` | Arquivos efêmeros | Expira em 7 dias | (uso manual/lab) | — |
-| `laboratorio/` | Área para prática educacional | — | (uso manual) | — |
-| `laboratorio/standard/` | Demonstração classe Standard | — | (uso manual) | — |
-| `laboratorio/intelligent-tiering/` | Demonstração IT | — | (uso manual) | — |
-| `laboratorio/glacier-flexible/` | Demonstração Glacier | — | (uso manual) | — |
-| `laboratorio/deep-archive/` | Demonstração Deep Archive | — | (uso manual) | — |
+| `temporarios/` | Arquivos efêmeros | Expira em 7 dias | (uso manual) | — |
+| `laboratorio/` | Área para prática de classes de armazenamento | — | (uso manual) | — |
+| `laboratorio/standard/` | Objetos na classe Standard | — | (uso manual) | — |
+| `laboratorio/intelligent-tiering/` | Objetos na classe IT | — | (uso manual) | — |
+| `laboratorio/glacier-flexible/` | Objetos na classe Glacier | — | (uso manual) | — |
+| `laboratorio/deep-archive/` | Objetos na classe Deep Archive | — | (uso manual) | — |
 
 ### Categorias Disponíveis
 
@@ -671,7 +671,7 @@ processados/notas-fiscais/nf-001.pdf    ← não tem relação hierárquica real
 |---------|---------|---------------|
 | Método | OAC em vez de OAI | OAI é legado (deprecated). OAC é a recomendação atual da AWS, suporta SSE-KMS, e funciona com Resource Policy padrão |
 | Acesso ao bucket | Block All Public Access + Bucket Policy | O bucket frontend nunca é acessado diretamente. Mesmo se alguém descobrir o nome, não consegue acessar |
-| Benefício educacional | Demonstra o padrão moderno | Estudantes aprendem a configuração recomendada desde o início |
+| Benefício | Demonstra o padrão moderno | Utiliza a configuração recomendada pela AWS |
 
 ### Por que URLs Pré-Assinadas?
 
@@ -689,7 +689,7 @@ processados/notas-fiscais/nf-001.pdf    ← não tem relação hierárquica real
 |---------|---------|---------------|
 | Tipo | SSE-S3 em vez de SSE-KMS | SSE-S3 não tem custo adicional, não requer gerenciamento de chaves KMS, e atende requisitos de compliance básicos |
 | Transparência | Criptografia automática | Não requer alteração no código. S3 criptografa ao gravar e descriptografa ao ler, transparente para as Lambdas |
-| Simplicidade | Sem complexidade de KMS | Para um projeto educacional, SSE-S3 demonstra o conceito de encryption at rest sem overhead operacional |
+| Simplicidade | Sem complexidade de KMS | SSE-S3 demonstra o conceito de encryption at rest sem overhead operacional |
 | Padrão AWS | Default para novos buckets | Desde janeiro 2023, a AWS aplica SSE-S3 por padrão em todos os novos buckets |
 
 ### Por que Deny HTTP (Apenas HTTPS)?

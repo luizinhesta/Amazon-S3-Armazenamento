@@ -1,141 +1,134 @@
-# Guia de Implantação — Cofre Digital de Documentos com Amazon S3
+﻿# Guia de ImplantaÃ§Ã£o â€” Cofre Digital de Arquivos com Amazon S3
 
-> **Documento passo a passo para criação de TODOS os recursos via Console AWS.**  
-> Escrito para quem nunca usou o Console AWS antes. Cada etapa indica o serviço, menu, botão, campo, valor exato e resultado esperado.
+> **Documento passo a passo para criaÃ§Ã£o de TODOS os recursos via Console AWS.**  
+> Escrito para quem nunca usou o Console AWS antes. Cada etapa indica o serviÃ§o, menu, botÃ£o, campo, valor exato e resultado esperado.
 
 ---
 
 ## Placeholders Utilizados Neste Documento
 
-| Placeholder | Descrição | Exemplo |
+| Placeholder | DescriÃ§Ã£o | Exemplo |
 |-------------|-----------|---------|
-| `<AWS_ACCOUNT_ID>` | ID numérico de 12 dígitos da sua conta AWS | `123456789012` |
-| `<AWS_REGION>` | Região AWS selecionada (recomendado: `us-east-1`) | `us-east-1` |
+| `<AWS_ACCOUNT_ID>` | ID numÃ©rico de 12 dÃ­gitos da sua conta AWS | `123456789012` |
+| `<AWS_REGION>` | RegiÃ£o AWS selecionada (recomendado: `us-east-1`) | `us-east-1` |
 | `<BUCKET_DOCUMENTOS>` | Nome do bucket de documentos | `cofre-documentos-arquivos-<AWS_ACCOUNT_ID>` |
 | `<BUCKET_FRONTEND>` | Nome do bucket do frontend | `cofre-documentos-frontend-<AWS_ACCOUNT_ID>` |
-| `<DOMINIO_CLOUDFRONT>` | Domínio da distribuição CloudFront | `dXXXXXXXXXXXXX.cloudfront.net` |
-| `<API_GATEWAY_URL>` | URL de invocação da API Gateway | `https://xxxxxxxxxx.execute-api.<AWS_REGION>.amazonaws.com` |
-| `<DISTRIBUTION_ID>` | ID da distribuição CloudFront | `E1A2B3C4D5E6F7` |
+| `<DOMINIO_CLOUDFRONT>` | DomÃ­nio da distribuiÃ§Ã£o CloudFront | `dXXXXXXXXXXXXX.cloudfront.net` |
+| `<API_GATEWAY_URL>` | URL de invocaÃ§Ã£o da API Gateway | `https://xxxxxxxxxx.execute-api.<AWS_REGION>.amazonaws.com` |
+| `<DISTRIBUTION_ID>` | ID da distribuiÃ§Ã£o CloudFront | `E1A2B3C4D5E6F7` |
 
-> **Dica:** Antes de começar, abra um editor de texto (Notepad, VS Code, etc.) e crie um arquivo `meus-recursos.txt` para anotar cada ARN, URL e ID gerado durante a implantação.
+> **Dica:** Antes de comeÃ§ar, abra um editor de texto (Notepad, VS Code, etc.) e crie um arquivo `meus-recursos.txt` para anotar cada ARN, URL e ID gerado durante a implantaÃ§Ã£o.
 
 ---
 
-## Pré-requisitos
+## PrÃ©-requisitos
 
 ### 1. Conta AWS Ativa
 
 - Acesse [https://aws.amazon.com](https://aws.amazon.com)
-- Se não possui conta, clique em **Criar uma conta da AWS** e siga o processo de cadastro
-- Você precisará de: e-mail válido, cartão de crédito/débito (para verificação), número de telefone
-- Após criação, aguarde a ativação (pode levar até 24h, mas geralmente é instantâneo)
+- Se nÃ£o possui conta, clique em **Criar uma conta da AWS** e siga o processo de cadastro
+- VocÃª precisarÃ¡ de: e-mail vÃ¡lido, cartÃ£o de crÃ©dito/dÃ©bito (para verificaÃ§Ã£o), nÃºmero de telefone
+- ApÃ³s criaÃ§Ã£o, aguarde a ativaÃ§Ã£o (pode levar atÃ© 24h, mas geralmente Ã© instantÃ¢neo)
 
-### 2. Seleção de Região
+### 2. SeleÃ§Ã£o de RegiÃ£o
 
-- No canto superior direito do Console AWS, clique no nome da região atual
-- Selecione **US East (N. Virginia) us-east-1** (recomendado por ter todos os serviços e menor latência para testes)
-- **IMPORTANTE:** Mantenha a mesma região em TODAS as etapas. Trocar de região fará com que recursos fiquem invisíveis entre si
+- No canto superior direito do Console AWS, clique no nome da regiÃ£o atual
+- Selecione **US East (N. Virginia) us-east-1** (recomendado por ter todos os serviÃ§os e menor latÃªncia para testes)
+- **IMPORTANTE:** Mantenha a mesma regiÃ£o em TODAS as etapas. Trocar de regiÃ£o farÃ¡ com que recursos fiquem invisÃ­veis entre si
 
-### 3. Usuário IAM com Acesso Administrativo
+### 3. UsuÃ¡rio IAM com Acesso Administrativo
 
-> Se você está usando a conta root (e-mail de cadastro), pule esta seção. Para produção, recomenda-se criar um usuário IAM.
+> Se vocÃª estÃ¡ usando a conta root (e-mail de cadastro), pule esta seÃ§Ã£o. Para produÃ§Ã£o, recomenda-se criar um usuÃ¡rio IAM.
 
-- Acesse **IAM** (digite "IAM" na barra de busca superior e clique no serviço)
-- No menu lateral esquerdo, clique em **Users** (Usuários)
-- Clique no botão **Create user** (Criar usuário)
+- Acesse **IAM** (digite "IAM" na barra de busca superior e clique no serviÃ§o)
+- No menu lateral esquerdo, clique em **Users** (UsuÃ¡rios)
+- Clique no botÃ£o **Create user** (Criar usuÃ¡rio)
 - **User name**: `admin-cofre-digital`
-- Marque ✅ **Provide user access to the AWS Management Console**
+- Marque âœ… **Provide user access to the AWS Management Console**
 - Selecione **I want to create an IAM user**
 - **Console password**: Selecione **Custom password** e defina uma senha forte
-- Desmarque ☐ **Users must create a new password at next sign-in**
+- Desmarque â˜ **Users must create a new password at next sign-in**
 - Clique em **Next**
-- Na tela de permissões, selecione **Attach policies directly**
-- Na busca, digite `AdministratorAccess` e marque ✅ a política **AdministratorAccess**
-- Clique em **Next** → **Create user**
+- Na tela de permissÃµes, selecione **Attach policies directly**
+- Na busca, digite `AdministratorAccess` e marque âœ… a polÃ­tica **AdministratorAccess**
+- Clique em **Next** â†’ **Create user**
 - **Anote** a URL de login do console (formato: `https://<AWS_ACCOUNT_ID>.signin.aws.amazon.com/console`)
-- Faça logout da conta root e login com o usuário IAM criado
+- FaÃ§a logout da conta root e login com o usuÃ¡rio IAM criado
 
 ### 4. Obter o Account ID
 
-- No canto superior direito, clique no nome do seu usuário/conta
-- O **Account ID** (12 dígitos) aparece no menu dropdown
-- **Anote** este número — será usado em todos os nomes de recursos como `<AWS_ACCOUNT_ID>`
+- No canto superior direito, clique no nome do seu usuÃ¡rio/conta
+- O **Account ID** (12 dÃ­gitos) aparece no menu dropdown
+- **Anote** este nÃºmero â€” serÃ¡ usado em todos os nomes de recursos como `<AWS_ACCOUNT_ID>`
 
 ---
 
 ## Etapa 1: Criar Bucket de Documentos
 
-Este bucket armazenará todos os documentos do cofre digital (uploads, processados, rejeitados, temporários e laboratório).
+Este bucket armazenarÃ¡ todos os documentos do cofre digital (uploads, processados, rejeitados e temporÃ¡rios).
 
 ### Passo a passo
 
-1. Na barra de busca superior do Console AWS, digite **S3** e clique no serviço **S3**
-2. Clique no botão laranja **Create bucket** (Criar bucket)
+1. Na barra de busca superior do Console AWS, digite **S3** e clique no serviÃ§o **S3**
+2. Clique no botÃ£o laranja **Create bucket** (Criar bucket)
 3. Preencha os campos conforme abaixo:
 
 | Campo | Valor |
 |-------|-------|
-| **Bucket name** | `cofre-documentos-arquivos-<AWS_ACCOUNT_ID>` (substitua pelo seu ID de 12 dígitos) |
-| **AWS Region** | `US East (N. Virginia) us-east-1` (deve já estar selecionada) |
+| **Bucket name** | `cofre-documentos-arquivos-<AWS_ACCOUNT_ID>` (substitua pelo seu ID de 12 dÃ­gitos) |
+| **AWS Region** | `US East (N. Virginia) us-east-1` (deve jÃ¡ estar selecionada) |
 
-4. **Object Ownership**: Mantenha selecionado **ACLs disabled (recommended)** — Bucket owner enforced
-   - Isso garante que apenas o dono do bucket controla acesso via políticas
+4. **Object Ownership**: Mantenha selecionado **ACLs disabled (recommended)** â€” Bucket owner enforced
+   - Isso garante que apenas o dono do bucket controla acesso via polÃ­ticas
 
 5. **Block Public Access settings for this bucket**:
-   - Mantenha ✅ marcado **Block *all* public access**
-   - Este bucket NUNCA deve ser público — acesso será apenas via Lambda e URLs pré-assinadas
+   - Mantenha âœ… marcado **Block *all* public access**
+   - Este bucket NUNCA deve ser pÃºblico â€” acesso serÃ¡ apenas via Lambda e URLs prÃ©-assinadas
 
 6. **Bucket Versioning**:
-   - Selecione ✅ **Enable**
-   - Isso permite manter histórico de versões dos documentos
+   - Selecione âœ… **Enable**
+   - Isso permite manter histÃ³rico de versÃµes dos documentos
 
 7. **Tags** (opcional mas recomendado):
    - Clique em **Add tag**
    - Key: `projeto` | Value: `cofre-digital`
    - Clique em **Add tag** novamente
-   - Key: `ambiente` | Value: `educacional`
+   - Key: `ambiente` | Value: `producao`
 
 8. **Default encryption**:
    - **Encryption type**: Selecione **Server-side encryption with Amazon S3 managed keys (SSE-S3)**
    - **Bucket Key**: Mantenha **Enable** selecionado (reduz custos de criptografia)
 
-9. Clique no botão laranja **Create bucket** no final da página
+9. Clique no botÃ£o laranja **Create bucket** no final da pÃ¡gina
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- Você será redirecionado para a lista de buckets
+- VocÃª serÃ¡ redirecionado para a lista de buckets
 - O bucket `cofre-documentos-arquivos-<AWS_ACCOUNT_ID>` deve aparecer na lista
 - Clique no nome do bucket para abri-lo
-- Verifique na aba **Properties**: Versioning está **Enabled**, Encryption mostra **SSE-S3**
+- Verifique na aba **Properties**: Versioning estÃ¡ **Enabled**, Encryption mostra **SSE-S3**
 - Verifique na aba **Permissions**: Block public access mostra **On** para todos os 4 itens
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Bucket name already exists" | Nomes de bucket são globais na AWS | Verifique se digitou seu Account ID corretamente |
-| "Bucket name is not valid" | Caracteres inválidos no nome | Use apenas letras minúsculas, números e hífens |
 
 ### Anote
 
 - **Nome do bucket**: `cofre-documentos-arquivos-<AWS_ACCOUNT_ID>`
 - **ARN do bucket**: `arn:aws:s3:::cofre-documentos-arquivos-<AWS_ACCOUNT_ID>`
-- Estes valores serão usados nas políticas IAM (Etapa 5) e nas variáveis de ambiente das Lambdas (Etapa 7)
+- Estes valores serÃ£o usados nas polÃ­ticas IAM (Etapa 5) e nas variÃ¡veis de ambiente das Lambdas (Etapa 7)
 
 ---
 
 ## Etapa 2: Configurar CORS do Bucket de Documentos
 
-O CORS (Cross-Origin Resource Sharing) permite que o navegador do usuário envie e receba arquivos diretamente do S3 via URLs pré-assinadas. Sem esta configuração, o upload/download via navegador será bloqueado.
+O CORS (Cross-Origin Resource Sharing) permite que o navegador do usuÃ¡rio envie e receba arquivos diretamente do S3 via URLs prÃ©-assinadas. Sem esta configuraÃ§Ã£o, o upload/download via navegador serÃ¡ bloqueado.
 
 ### Passo a passo
 
 1. No Console S3, clique no bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
-2. Clique na aba **Permissions** (Permissões)
-3. Role a página até a seção **Cross-origin resource sharing (CORS)**
-4. Clique no botão **Edit** (Editar)
-5. Apague qualquer conteúdo existente no campo de texto
-6. Cole o JSON abaixo (é o conteúdo do arquivo `s3/cors-documentos.json` deste repositório):
+2. Clique na aba **Permissions** (PermissÃµes)
+3. Role a pÃ¡gina atÃ© a seÃ§Ã£o **Cross-origin resource sharing (CORS)**
+4. Clique no botÃ£o **Edit** (Editar)
+5. Apague qualquer conteÃºdo existente no campo de texto
+6. Cole o JSON abaixo (Ã© o conteÃºdo do arquivo `s3/cors-documentos.json` deste repositÃ³rio):
 
 ```json
 [
@@ -160,46 +153,39 @@ O CORS (Cross-Origin Resource Sharing) permite que o navegador do usuário envie
 ]
 ```
 
-> **ATENÇÃO:** Neste momento, você ainda não tem o domínio CloudFront (será criado na Etapa 12). Por enquanto, use `"https://placeholder.cloudfront.net"` como valor temporário. Na **Etapa 14**, você voltará aqui para substituir pelo domínio real.
+> **ATENÃ‡ÃƒO:** Neste momento, vocÃª ainda nÃ£o tem o domÃ­nio CloudFront (serÃ¡ criado na Etapa 12). Por enquanto, use `"https://placeholder.cloudfront.net"` como valor temporÃ¡rio. Na **Etapa 14**, vocÃª voltarÃ¡ aqui para substituir pelo domÃ­nio real.
 
-7. Clique no botão laranja **Save changes** (Salvar alterações)
+7. Clique no botÃ£o laranja **Save changes** (Salvar alteraÃ§Ãµes)
 
-### Explicação dos campos
+### ExplicaÃ§Ã£o dos campos
 
 | Campo | Significado |
 |-------|-------------|
-| `AllowedHeaders: ["*"]` | Aceita qualquer header na requisição (necessário para Content-Type e metadados) |
-| `AllowedMethods: ["PUT", "GET", "HEAD"]` | Permite upload (PUT), download (GET) e verificação (HEAD) |
-| `AllowedOrigins` | Domínio que pode fazer requisições — será o CloudFront do frontend |
+| `AllowedHeaders: ["*"]` | Aceita qualquer header na requisiÃ§Ã£o (necessÃ¡rio para Content-Type e metadados) |
+| `AllowedMethods: ["PUT", "GET", "HEAD"]` | Permite upload (PUT), download (GET) e verificaÃ§Ã£o (HEAD) |
+| `AllowedOrigins` | DomÃ­nio que pode fazer requisiÃ§Ãµes â€” serÃ¡ o CloudFront do frontend |
 | `ExposeHeaders: ["ETag", "x-amz-version-id"]` | Permite que o navegador leia esses headers da resposta do S3 |
 | `MaxAgeSeconds: 3000` | Navegador pode cachear a resposta do preflight (OPTIONS) por 50 minutos |
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- Após salvar, a seção CORS deve exibir o JSON configurado
-- Se mostrar "No CORS configuration", algo deu errado — tente novamente
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "MalformedXML" ou erro de parse | JSON com formato inválido | Verifique vírgulas, aspas e colchetes |
-| CORS não aparece após salvar | Cache do navegador | Faça refresh (F5) na página |
+- ApÃ³s salvar, a seÃ§Ã£o CORS deve exibir o JSON configurado
+- Se mostrar "No CORS configuration", algo deu errado â€” tente novamente
 
 ---
 
-## Etapa 3: Aplicar Bucket Policy (HTTPS Obrigatório)
+## Etapa 3: Aplicar Bucket Policy (HTTPS ObrigatÃ³rio)
 
-Esta política nega qualquer operação S3 que não utilize HTTPS, garantindo que todo o tráfego seja criptografado em trânsito.
+Esta polÃ­tica nega qualquer operaÃ§Ã£o S3 que nÃ£o utilize HTTPS, garantindo que todo o trÃ¡fego seja criptografado em trÃ¢nsito.
 
 ### Passo a passo
 
 1. No Console S3, clique no bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
-2. Clique na aba **Permissions** (Permissões)
-3. Role até a seção **Bucket policy**
-4. Clique no botão **Edit** (Editar)
-5. Apague qualquer conteúdo existente no campo de texto
-6. Cole o JSON abaixo (é o conteúdo do arquivo `s3/bucket-policy-documentos.json` deste repositório):
+2. Clique na aba **Permissions** (PermissÃµes)
+3. Role atÃ© a seÃ§Ã£o **Bucket policy**
+4. Clique no botÃ£o **Edit** (Editar)
+5. Apague qualquer conteÃºdo existente no campo de texto
+6. Cole o JSON abaixo (Ã© o conteÃºdo do arquivo `s3/bucket-policy-documentos.json` deste repositÃ³rio):
 
 ```json
 {
@@ -224,45 +210,37 @@ Esta política nega qualquer operação S3 que não utilize HTTPS, garantindo qu
 }
 ```
 
-7. **IMPORTANTE:** Substitua `<AWS_ACCOUNT_ID>` pelo seu ID de 12 dígitos nos dois campos `Resource`
-8. Clique no botão laranja **Save changes** (Salvar alterações)
+7. **IMPORTANTE:** Substitua `<AWS_ACCOUNT_ID>` pelo seu ID de 12 dÃ­gitos nos dois campos `Resource`
+8. Clique no botÃ£o laranja **Save changes** (Salvar alteraÃ§Ãµes)
 
-### Explicação da política
+### ExplicaÃ§Ã£o da polÃ­tica
 
 | Elemento | Significado |
 |----------|-------------|
-| `Effect: Deny` | Nega a ação |
-| `Principal: *` | Aplica a qualquer identidade (usuários, roles, serviços) |
-| `Action: s3:*` | Qualquer operação S3 |
+| `Effect: Deny` | Nega a aÃ§Ã£o |
+| `Principal: *` | Aplica a qualquer identidade (usuÃ¡rios, roles, serviÃ§os) |
+| `Action: s3:*` | Qualquer operaÃ§Ã£o S3 |
 | `Resource` | O bucket e todos os objetos dentro dele (`/*`) |
-| `Condition: aws:SecureTransport = false` | Aplica a condição apenas quando a requisição NÃO usa HTTPS |
+| `Condition: aws:SecureTransport = false` | Aplica a condiÃ§Ã£o apenas quando a requisiÃ§Ã£o NÃƒO usa HTTPS |
 
-**Resultado:** Qualquer tentativa de acessar o bucket via HTTP (sem TLS) será negada.
+**Resultado:** Qualquer tentativa de acessar o bucket via HTTP (sem TLS) serÃ¡ negada.
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- Após salvar, a seção Bucket policy deve exibir o JSON da política
-- O banner amarelo "Bucket and objects not public" deve continuar aparecendo (a política não torna público)
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Invalid principal in policy" | Erro de digitação no Principal | Deve ser exatamente `"*"` (com aspas) |
-| "Policy has invalid resource" | ARN do bucket incorreto | Verifique que o nome do bucket está correto no Resource |
-| "MalformedPolicy" | JSON inválido | Valide o JSON em [jsonlint.com](https://jsonlint.com) |
+- ApÃ³s salvar, a seÃ§Ã£o Bucket policy deve exibir o JSON da polÃ­tica
+- O banner amarelo "Bucket and objects not public" deve continuar aparecendo (a polÃ­tica nÃ£o torna pÃºblico)
 
 ---
 
 ## Etapa 4: Criar Prefixos (Estrutura de Pastas)
 
-No S3, "pastas" são na verdade prefixos de objetos. Vamos criar a estrutura organizacional do bucket criando objetos vazios com `/` no final (que o Console exibe como pastas).
+No S3, "pastas" sÃ£o na verdade prefixos de objetos. Vamos criar a estrutura organizacional do bucket criando objetos vazios com `/` no final (que o Console exibe como pastas).
 
 ### Passo a passo
 
 1. No Console S3, clique no bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
-2. Você está na aba **Objects** (Objetos)
-3. Clique no botão **Create folder** (Criar pasta)
+2. VocÃª estÃ¡ na aba **Objects** (Objetos)
+3. Clique no botÃ£o **Create folder** (Criar pasta)
 
 ### Criar pasta: `entrada/`
 
@@ -273,91 +251,91 @@ No S3, "pastas" são na verdade prefixos de objetos. Vamos criar a estrutura org
 ### Criar subpastas dentro de `entrada/`
 
 7. Clique na pasta **entrada/** que acabou de aparecer
-8. Agora você está dentro de `entrada/`. Clique em **Create folder**
-9. **Folder name**: `contratos` → Clique **Create folder**
+8. Agora vocÃª estÃ¡ dentro de `entrada/`. Clique em **Create folder**
+9. **Folder name**: `contratos` â†’ Clique **Create folder**
 10. Clique em **Create folder** novamente
-11. **Folder name**: `notas-fiscais` → Clique **Create folder**
+11. **Folder name**: `notas-fiscais` â†’ Clique **Create folder**
 12. Repita para: `relatorios`, `comprovantes`, `outros`
 
 ### Criar pasta: `processados/`
 
-13. Navegue de volta à raiz do bucket clicando no nome do bucket no breadcrumb (trilha de navegação no topo)
+13. Navegue de volta Ã  raiz do bucket clicando no nome do bucket no breadcrumb (trilha de navegaÃ§Ã£o no topo)
 14. Clique em **Create folder**
-15. **Folder name**: `processados` → Clique **Create folder**
+15. **Folder name**: `processados` â†’ Clique **Create folder**
 16. Clique na pasta **processados/**
 17. Crie as mesmas subpastas: `contratos`, `notas-fiscais`, `relatorios`, `comprovantes`, `outros`
 
 ### Criar pasta: `rejeitados/`
 
-18. Volte à raiz do bucket
+18. Volte Ã  raiz do bucket
 19. Clique em **Create folder**
-20. **Folder name**: `rejeitados` → Clique **Create folder**
+20. **Folder name**: `rejeitados` â†’ Clique **Create folder**
 
 ### Criar pasta: `temporarios/`
 
 21. Clique em **Create folder**
-22. **Folder name**: `temporarios` → Clique **Create folder**
+22. **Folder name**: `temporarios` â†’ Clique **Create folder**
 
 ### Criar pasta: `laboratorio/`
 
 23. Clique em **Create folder**
-24. **Folder name**: `laboratorio` → Clique **Create folder**
+24. **Folder name**: `laboratorio` â†’ Clique **Create folder**
 25. Clique na pasta **laboratorio/**
 26. Crie as subpastas: `standard`, `intelligent-tiering`, `glacier-flexible`, `deep-archive`
 
 ### Estrutura final
 
-Após concluir, a raiz do bucket deve mostrar:
+ApÃ³s concluir, a raiz do bucket deve mostrar:
 
 ```
 entrada/
-├── contratos/
-├── notas-fiscais/
-├── relatorios/
-├── comprovantes/
-└── outros/
+â”œâ”€â”€ contratos/
+â”œâ”€â”€ notas-fiscais/
+â”œâ”€â”€ relatorios/
+â”œâ”€â”€ comprovantes/
+â””â”€â”€ outros/
 processados/
-├── contratos/
-├── notas-fiscais/
-├── relatorios/
-├── comprovantes/
-└── outros/
+â”œâ”€â”€ contratos/
+â”œâ”€â”€ notas-fiscais/
+â”œâ”€â”€ relatorios/
+â”œâ”€â”€ comprovantes/
+â””â”€â”€ outros/
 rejeitados/
 temporarios/
 laboratorio/
-├── standard/
-├── intelligent-tiering/
-├── glacier-flexible/
-└── deep-archive/
+â”œâ”€â”€ standard/
+â”œâ”€â”€ intelligent-tiering/
+â”œâ”€â”€ glacier-flexible/
+â””â”€â”€ deep-archive/
 ```
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- Na raiz do bucket, você deve ver 5 "pastas": entrada/, processados/, rejeitados/, temporarios/, laboratorio/
+- Na raiz do bucket, vocÃª deve ver 5 "pastas": entrada/, processados/, rejeitados/, temporarios/, laboratorio/
 - Clique em cada uma para verificar que as subpastas foram criadas corretamente
 
 ### Nota importante
 
-> O S3 não possui "pastas" reais. Cada "pasta" é um objeto de 0 bytes com o nome terminando em `/`. Quando a Lambda cria objetos com prefixos como `processados/contratos/arquivo.pdf`, a "pasta" aparece automaticamente — mas criá-las antecipadamente ajuda na organização visual.
+> O S3 nÃ£o possui "pastas" reais. Cada "pasta" Ã© um objeto de 0 bytes com o nome terminando em `/`. Quando a Lambda cria objetos com prefixos como `processados/contratos/arquivo.pdf`, a "pasta" aparece automaticamente â€” mas criÃ¡-las antecipadamente ajuda na organizaÃ§Ã£o visual.
 
 ---
 
-## Etapa 5: Criar Políticas IAM
+## Etapa 5: Criar PolÃ­ticas IAM
 
-Cada função Lambda terá sua própria política IAM com permissões mínimas (princípio do menor privilégio). Nesta etapa, criaremos 6 políticas customizadas.
+Cada funÃ§Ã£o Lambda terÃ¡ sua prÃ³pria polÃ­tica IAM com permissÃµes mÃ­nimas (princÃ­pio do menor privilÃ©gio). Nesta etapa, criaremos 6 polÃ­ticas customizadas.
 
 ### Passo a passo geral
 
-1. Na barra de busca superior, digite **IAM** e clique no serviço **IAM**
-2. No menu lateral esquerdo, clique em **Policies** (Políticas)
-3. Clique no botão **Create policy** (Criar política)
+1. Na barra de busca superior, digite **IAM** e clique no serviÃ§o **IAM**
+2. No menu lateral esquerdo, clique em **Policies** (PolÃ­ticas)
+3. Clique no botÃ£o **Create policy** (Criar polÃ­tica)
 
 ---
 
-### Política 1: `cofre-policy-gerar-url-upload`
+### PolÃ­tica 1: `cofre-policy-gerar-url-upload`
 
-4. Na tela de criação, clique na aba **JSON** (ao lado de Visual)
-5. Apague o conteúdo padrão e cole o JSON abaixo (arquivo `iam/gerar-url-upload-policy.json`):
+4. Na tela de criaÃ§Ã£o, clique na aba **JSON** (ao lado de Visual)
+5. Apague o conteÃºdo padrÃ£o e cole o JSON abaixo (arquivo `iam/gerar-url-upload-policy.json`):
 
 ```json
 {
@@ -383,19 +361,19 @@ Cada função Lambda terá sua própria política IAM com permissões mínimas (
 }
 ```
 
-6. **Substitua** `<AWS_ACCOUNT_ID>` pelo seu ID de 12 dígitos (aparece 2 vezes)
-7. **Substitua** `<AWS_REGION>` por `us-east-1` (ou sua região escolhida)
-8. Clique em **Next** (Próximo)
+6. **Substitua** `<AWS_ACCOUNT_ID>` pelo seu ID de 12 dÃ­gitos (aparece 2 vezes)
+7. **Substitua** `<AWS_REGION>` por `us-east-1` (ou sua regiÃ£o escolhida)
+8. Clique em **Next** (PrÃ³ximo)
 9. No campo **Policy name**: digite `cofre-policy-gerar-url-upload`
 10. No campo **Description**: digite `Permite upload de objetos no prefixo entrada/ e logs no CloudWatch`
 11. Em **Tags**, adicione: Key: `projeto` | Value: `cofre-digital`
-12. Clique em **Create policy** (Criar política)
+12. Clique em **Create policy** (Criar polÃ­tica)
 
 ---
 
-### Política 2: `cofre-policy-processar-documento`
+### PolÃ­tica 2: `cofre-policy-processar-documento`
 
-13. Volte para **Policies** → **Create policy** → aba **JSON**
+13. Volte para **Policies** â†’ **Create policy** â†’ aba **JSON**
 14. Cole o JSON (arquivo `iam/processar-documento-policy.json`):
 
 ```json
@@ -452,9 +430,9 @@ Cada função Lambda terá sua própria política IAM com permissões mínimas (
 
 ---
 
-### Política 3: `cofre-policy-listar-documentos`
+### PolÃ­tica 3: `cofre-policy-listar-documentos`
 
-20. **Policies** → **Create policy** → aba **JSON**
+20. **Policies** â†’ **Create policy** â†’ aba **JSON**
 21. Cole o JSON (arquivo `iam/listar-documentos-policy.json`):
 
 ```json
@@ -496,15 +474,15 @@ Cada função Lambda terá sua própria política IAM com permissões mínimas (
 ```
 
 22. **Substitua** `<AWS_ACCOUNT_ID>` (3 vezes) e `<AWS_REGION>` (1 vez)
-23. **Next** → **Policy name**: `cofre-policy-listar-documentos`
+23. **Next** â†’ **Policy name**: `cofre-policy-listar-documentos`
 24. **Description**: `Permite listar bucket no prefixo processados/ e ler objetos e tags`
 25. **Create policy**
 
 ---
 
-### Política 4: `cofre-policy-gerar-url-download`
+### PolÃ­tica 4: `cofre-policy-gerar-url-download`
 
-26. **Policies** → **Create policy** → aba **JSON**
+26. **Policies** â†’ **Create policy** â†’ aba **JSON**
 27. Cole o JSON (arquivo `iam/gerar-url-download-policy.json`):
 
 ```json
@@ -532,15 +510,15 @@ Cada função Lambda terá sua própria política IAM com permissões mínimas (
 ```
 
 28. **Substitua** os placeholders
-29. **Next** → **Policy name**: `cofre-policy-gerar-url-download`
-30. **Description**: `Permite leitura de objetos em processados/ para geração de URL de download`
+29. **Next** â†’ **Policy name**: `cofre-policy-gerar-url-download`
+30. **Description**: `Permite leitura de objetos em processados/ para geraÃ§Ã£o de URL de download`
 31. **Create policy**
 
 ---
 
-### Política 5: `cofre-policy-listar-versoes`
+### PolÃ­tica 5: `cofre-policy-listar-versoes`
 
-32. **Policies** → **Create policy** → aba **JSON**
+32. **Policies** â†’ **Create policy** â†’ aba **JSON**
 33. Cole o JSON (arquivo `iam/listar-versoes-policy.json`):
 
 ```json
@@ -579,15 +557,15 @@ Cada função Lambda terá sua própria política IAM com permissões mínimas (
 ```
 
 34. **Substitua** os placeholders
-35. **Next** → **Policy name**: `cofre-policy-listar-versoes`
-36. **Description**: `Permite listar versões de objetos em processados/`
+35. **Next** â†’ **Policy name**: `cofre-policy-listar-versoes`
+36. **Description**: `Permite listar versÃµes de objetos em processados/`
 37. **Create policy**
 
 ---
 
-### Política 6: `cofre-policy-restaurar-documento`
+### PolÃ­tica 6: `cofre-policy-restaurar-documento`
 
-38. **Policies** → **Create policy** → aba **JSON**
+38. **Policies** â†’ **Create policy** â†’ aba **JSON**
 39. Cole o JSON (arquivo `iam/restaurar-documento-policy.json`):
 
 ```json
@@ -618,14 +596,14 @@ Cada função Lambda terá sua própria política IAM com permissões mínimas (
 ```
 
 40. **Substitua** os placeholders
-41. **Next** → **Policy name**: `cofre-policy-restaurar-documento`
+41. **Next** â†’ **Policy name**: `cofre-policy-restaurar-documento`
 42. **Description**: `Permite restaurar objetos Glacier e ler objetos em processados/`
 43. **Create policy**
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- No menu **Policies**, use o filtro **Customer managed** (políticas gerenciadas pelo cliente)
-- Você deve ver 6 políticas começando com `cofre-policy-`:
+- No menu **Policies**, use o filtro **Customer managed** (polÃ­ticas gerenciadas pelo cliente)
+- VocÃª deve ver 6 polÃ­ticas comeÃ§ando com `cofre-policy-`:
   1. `cofre-policy-gerar-url-upload`
   2. `cofre-policy-processar-documento`
   3. `cofre-policy-listar-documentos`
@@ -633,54 +611,46 @@ Cada função Lambda terá sua própria política IAM com permissões mínimas (
   5. `cofre-policy-listar-versoes`
   6. `cofre-policy-restaurar-documento`
 
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "MalformedPolicyDocument" | JSON inválido | Valide em [jsonlint.com](https://jsonlint.com) |
-| "A policy with this name already exists" | Nome duplicado | Verifique se não criou duas vezes |
-| "Invalid ARN" | ARN mal formatado | Verifique que o Account ID tem 12 dígitos e a região está correta |
-
 ---
 
 ## Etapa 6: Criar Roles IAM
 
-Cada função Lambda precisa de um IAM Role (papel) que define com qual identidade ela executa. O Role combina uma trust policy (quem pode assumir o papel) com as políticas de permissão criadas na Etapa 5.
+Cada funÃ§Ã£o Lambda precisa de um IAM Role (papel) que define com qual identidade ela executa. O Role combina uma trust policy (quem pode assumir o papel) com as polÃ­ticas de permissÃ£o criadas na Etapa 5.
 
 ### Passo a passo geral
 
-1. No Console IAM, no menu lateral esquerdo, clique em **Roles** (Funções)
-2. Clique no botão **Create role** (Criar função)
+1. No Console IAM, no menu lateral esquerdo, clique em **Roles** (FunÃ§Ãµes)
+2. Clique no botÃ£o **Create role** (Criar funÃ§Ã£o)
 
 ---
 
 ### Role 1: `cofre-role-gerar-url-upload`
 
-3. **Select trusted entity** (Selecionar entidade confiável):
+3. **Select trusted entity** (Selecionar entidade confiÃ¡vel):
    - Tipo: Selecione **AWS service**
-   - **Use case**: Na seção "Use cases for other AWS services", no dropdown, selecione **Lambda**
+   - **Use case**: Na seÃ§Ã£o "Use cases for other AWS services", no dropdown, selecione **Lambda**
    - Clique em **Next**
 
-4. **Add permissions** (Adicionar permissões):
+4. **Add permissions** (Adicionar permissÃµes):
    - Na barra de busca, digite `cofre-policy-gerar-url-upload`
-   - Marque ✅ a política **cofre-policy-gerar-url-upload**
+   - Marque âœ… a polÃ­tica **cofre-policy-gerar-url-upload**
    - Clique em **Next**
 
 5. **Name, review, and create**:
    - **Role name**: `cofre-role-gerar-url-upload`
-   - **Description**: `Role para a Lambda que gera URLs pré-assinadas de upload`
+   - **Description**: `Role para a Lambda que gera URLs prÃ©-assinadas de upload`
    - Em **Tags**, adicione: Key: `projeto` | Value: `cofre-digital`
    - Clique em **Create role**
 
-6. **Anote o ARN do role** (aparece na confirmação): `arn:aws:iam::<AWS_ACCOUNT_ID>:role/cofre-role-gerar-url-upload`
+6. **Anote o ARN do role** (aparece na confirmaÃ§Ã£o): `arn:aws:iam::<AWS_ACCOUNT_ID>:role/cofre-role-gerar-url-upload`
 
 ---
 
 ### Role 2: `cofre-role-processar-documento`
 
-7. **Roles** → **Create role**
-8. **Trusted entity**: AWS service → Lambda → **Next**
-9. **Permissions**: Busque `cofre-policy-processar-documento` → Marque ✅ → **Next**
+7. **Roles** â†’ **Create role**
+8. **Trusted entity**: AWS service â†’ Lambda â†’ **Next**
+9. **Permissions**: Busque `cofre-policy-processar-documento` â†’ Marque âœ… â†’ **Next**
 10. **Role name**: `cofre-role-processar-documento`
 11. **Description**: `Role para a Lambda que processa documentos enviados`
 12. **Create role**
@@ -689,9 +659,9 @@ Cada função Lambda precisa de um IAM Role (papel) que define com qual identida
 
 ### Role 3: `cofre-role-listar-documentos`
 
-13. **Roles** → **Create role**
-14. **Trusted entity**: AWS service → Lambda → **Next**
-15. **Permissions**: Busque `cofre-policy-listar-documentos` → Marque ✅ → **Next**
+13. **Roles** â†’ **Create role**
+14. **Trusted entity**: AWS service â†’ Lambda â†’ **Next**
+15. **Permissions**: Busque `cofre-policy-listar-documentos` â†’ Marque âœ… â†’ **Next**
 16. **Role name**: `cofre-role-listar-documentos`
 17. **Description**: `Role para a Lambda que lista documentos processados`
 18. **Create role**
@@ -700,41 +670,41 @@ Cada função Lambda precisa de um IAM Role (papel) que define com qual identida
 
 ### Role 4: `cofre-role-gerar-url-download`
 
-19. **Roles** → **Create role**
-20. **Trusted entity**: AWS service → Lambda → **Next**
-21. **Permissions**: Busque `cofre-policy-gerar-url-download` → Marque ✅ → **Next**
+19. **Roles** â†’ **Create role**
+20. **Trusted entity**: AWS service â†’ Lambda â†’ **Next**
+21. **Permissions**: Busque `cofre-policy-gerar-url-download` â†’ Marque âœ… â†’ **Next**
 22. **Role name**: `cofre-role-gerar-url-download`
-23. **Description**: `Role para a Lambda que gera URLs pré-assinadas de download`
+23. **Description**: `Role para a Lambda que gera URLs prÃ©-assinadas de download`
 24. **Create role**
 
 ---
 
 ### Role 5: `cofre-role-listar-versoes`
 
-25. **Roles** → **Create role**
-26. **Trusted entity**: AWS service → Lambda → **Next**
-27. **Permissions**: Busque `cofre-policy-listar-versoes` → Marque ✅ → **Next**
+25. **Roles** â†’ **Create role**
+26. **Trusted entity**: AWS service â†’ Lambda â†’ **Next**
+27. **Permissions**: Busque `cofre-policy-listar-versoes` â†’ Marque âœ… â†’ **Next**
 28. **Role name**: `cofre-role-listar-versoes`
-29. **Description**: `Role para a Lambda que lista versões de documentos`
+29. **Description**: `Role para a Lambda que lista versÃµes de documentos`
 30. **Create role**
 
 ---
 
 ### Role 6: `cofre-role-restaurar-documento`
 
-31. **Roles** → **Create role**
-32. **Trusted entity**: AWS service → Lambda → **Next**
-33. **Permissions**: Busque `cofre-policy-restaurar-documento` → Marque ✅ → **Next**
+31. **Roles** â†’ **Create role**
+32. **Trusted entity**: AWS service â†’ Lambda â†’ **Next**
+33. **Permissions**: Busque `cofre-policy-restaurar-documento` â†’ Marque âœ… â†’ **Next**
 34. **Role name**: `cofre-role-restaurar-documento`
 35. **Description**: `Role para a Lambda que restaura documentos Glacier`
 36. **Create role**
 
 ---
 
-### Verificação
+### VerificaÃ§Ã£o
 
 - No menu **Roles**, busque `cofre-role`
-- Você deve ver 6 roles:
+- VocÃª deve ver 6 roles:
   1. `cofre-role-gerar-url-upload`
   2. `cofre-role-processar-documento`
   3. `cofre-role-listar-documentos`
@@ -743,75 +713,68 @@ Cada função Lambda precisa de um IAM Role (papel) que define com qual identida
   6. `cofre-role-restaurar-documento`
 - Clique em qualquer role e verifique:
   - Na aba **Trust relationships**: A trust policy deve mostrar `lambda.amazonaws.com`
-  - Na aba **Permissions**: A política customizada deve estar listada
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| Política não aparece na busca | Nome digitado errado | Use o filtro "Customer managed" e busque novamente |
-| "1 validation error detected" | Role name com caracteres inválidos | Use apenas letras, números e hífens |
+  - Na aba **Permissions**: A polÃ­tica customizada deve estar listada
 
 ---
 
-## Etapa 7: Criar Funções Lambda
+## Etapa 7: Criar FunÃ§Ãµes Lambda
 
-Nesta etapa, criaremos as 6 funções Lambda que compõem o backend do Cofre Digital. Cada função usa Python 3.12 e o código-fonte está no diretório `lambdas/` deste repositório.
+Nesta etapa, criaremos as 6 funÃ§Ãµes Lambda que compÃµem o backend do Cofre Digital. Cada funÃ§Ã£o usa Python 3.12 e o cÃ³digo-fonte estÃ¡ no diretÃ³rio `lambdas/` deste repositÃ³rio.
 
-### Estrutura dos arquivos Lambda no repositório
+### Estrutura dos arquivos Lambda no repositÃ³rio
 
 ```
 lambdas/
-├── shared/                          ← Módulo compartilhado (copiar para cada Lambda)
-│   ├── __init__.py
-│   ├── validation.py
-│   ├── key_builder.py
-│   └── response.py
-├── gerar_url_upload/
-│   └── lambda_function.py
-├── processar_documento/
-│   └── lambda_function.py
-├── listar_documentos/
-│   └── lambda_function.py
-├── gerar_url_download/
-│   └── lambda_function.py
-├── listar_versoes/
-│   └── lambda_function.py
-└── restaurar_documento/
-│   └── lambda_function.py
+â”œâ”€â”€ shared/                          â† MÃ³dulo compartilhado (copiar para cada Lambda)
+â”‚   â”œâ”€â”€ __init__.py
+â”‚   â”œâ”€â”€ validation.py
+â”‚   â”œâ”€â”€ key_builder.py
+â”‚   â””â”€â”€ response.py
+â”œâ”€â”€ gerar_url_upload/
+â”‚   â””â”€â”€ lambda_function.py
+â”œâ”€â”€ processar_documento/
+â”‚   â””â”€â”€ lambda_function.py
+â”œâ”€â”€ listar_documentos/
+â”‚   â””â”€â”€ lambda_function.py
+â”œâ”€â”€ gerar_url_download/
+â”‚   â””â”€â”€ lambda_function.py
+â”œâ”€â”€ listar_versoes/
+â”‚   â””â”€â”€ lambda_function.py
+â””â”€â”€ restaurar_documento/
+â”‚   â””â”€â”€ lambda_function.py
 ```
 
-> **IMPORTANTE:** Cada função Lambda precisa do módulo `shared/` junto com seu código. Ao fazer upload, você precisará incluir tanto o `lambda_function.py` quanto a pasta `shared/` em um arquivo ZIP.
+> **IMPORTANTE:** Cada funÃ§Ã£o Lambda precisa do mÃ³dulo `shared/` junto com seu cÃ³digo. Ao fazer upload, vocÃª precisarÃ¡ incluir tanto o `lambda_function.py` quanto a pasta `shared/` em um arquivo ZIP.
 
 ### Como preparar o arquivo ZIP para cada Lambda
 
-Para cada função Lambda, faça o seguinte no seu computador:
+Para cada funÃ§Ã£o Lambda, faÃ§a o seguinte no seu computador:
 
-1. Crie uma pasta temporária (ex: `deploy-gerar-url-upload/`)
+1. Crie uma pasta temporÃ¡ria (ex: `deploy-gerar-url-upload/`)
 2. Copie o arquivo `lambdas/gerar_url_upload/lambda_function.py` para dentro dela
 3. Copie a pasta `lambdas/shared/` inteira para dentro dela
-4. Selecione **todos os arquivos dentro** da pasta (NÃO a pasta em si)
+4. Selecione **todos os arquivos dentro** da pasta (NÃƒO a pasta em si)
 5. Crie um arquivo ZIP com esses itens (lambda_function.py + shared/)
 6. O ZIP resultante deve ter esta estrutura:
    ```
    lambda_function.py
    shared/
-   ├── __init__.py
-   ├── validation.py
-   ├── key_builder.py
-   └── response.py
+   â”œâ”€â”€ __init__.py
+   â”œâ”€â”€ validation.py
+   â”œâ”€â”€ key_builder.py
+   â””â”€â”€ response.py
    ```
 
-> **Dica no Windows:** Selecione os arquivos → Botão direito → Enviar para → Pasta compactada (zip)  
+> **Dica no Windows:** Selecione os arquivos â†’ BotÃ£o direito â†’ Enviar para â†’ Pasta compactada (zip)  
 > **Dica no Mac/Linux:** `cd deploy-gerar-url-upload && zip -r ../gerar-url-upload.zip .`
 
 ---
 
 ### Lambda 1: `cofre-gerar-url-upload`
 
-1. Na barra de busca superior, digite **Lambda** e clique no serviço **Lambda**
-2. Verifique que a região no canto superior direito é **us-east-1**
-3. Clique no botão **Create function** (Criar função)
+1. Na barra de busca superior, digite **Lambda** e clique no serviÃ§o **Lambda**
+2. Verifique que a regiÃ£o no canto superior direito Ã© **us-east-1**
+3. Clique no botÃ£o **Create function** (Criar funÃ§Ã£o)
 4. Selecione **Author from scratch** (Criar do zero)
 5. Preencha:
 
@@ -821,21 +784,21 @@ Para cada função Lambda, faça o seguinte no seu computador:
 | **Runtime** | `Python 3.12` |
 | **Architecture** | `x86_64` |
 
-6. Expanda a seção **Change default execution role** (Alterar role de execução padrão):
+6. Expanda a seÃ§Ã£o **Change default execution role** (Alterar role de execuÃ§Ã£o padrÃ£o):
    - Selecione **Use an existing role** (Usar uma role existente)
    - No dropdown **Existing role**, selecione `cofre-role-gerar-url-upload`
 
 7. Clique em **Create function**
 
-8. Na página da função criada, na seção **Code source**:
+8. Na pÃ¡gina da funÃ§Ã£o criada, na seÃ§Ã£o **Code source**:
    - Clique no dropdown **Upload from** (Carregar de)
    - Selecione **.zip file**
    - Clique em **Upload** e selecione o arquivo ZIP preparado (com lambda_function.py + shared/)
    - Clique em **Save**
 
-9. Na aba **Configuration** (Configuração), clique em **Environment variables** (Variáveis de ambiente) no menu lateral:
+9. Na aba **Configuration** (ConfiguraÃ§Ã£o), clique em **Environment variables** (VariÃ¡veis de ambiente) no menu lateral:
    - Clique em **Edit** (Editar)
-   - Clique em **Add environment variable** para cada variável abaixo:
+   - Clique em **Add environment variable** para cada variÃ¡vel abaixo:
 
 | Key | Value |
 |-----|-------|
@@ -846,7 +809,7 @@ Para cada função Lambda, faça o seguinte no seu computador:
 
    - Clique em **Save**
 
-10. Na aba **Configuration**, clique em **General configuration** (Configuração geral):
+10. Na aba **Configuration**, clique em **General configuration** (ConfiguraÃ§Ã£o geral):
     - Clique em **Edit**
     - **Memory**: `128` MB
     - **Timeout**: `0` min `30` sec
@@ -856,7 +819,7 @@ Para cada função Lambda, faça o seguinte no seu computador:
 
 ### Lambda 2: `cofre-processar-documento`
 
-11. **Lambda** → **Create function** → **Author from scratch**
+11. **Lambda** â†’ **Create function** â†’ **Author from scratch**
 12. Preencha:
 
 | Campo | Valor |
@@ -868,7 +831,7 @@ Para cada função Lambda, faça o seguinte no seu computador:
 
 13. **Create function**
 14. Upload do ZIP (lambda_function.py da pasta `processar_documento` + shared/)
-15. **Configuration** → **Environment variables** → **Edit**:
+15. **Configuration** â†’ **Environment variables** â†’ **Edit**:
 
 | Key | Value |
 |-----|-------|
@@ -878,13 +841,13 @@ Para cada função Lambda, faça o seguinte no seu computador:
 | `REJECTED_PREFIX` | `rejeitados` |
 
 16. **Save**
-17. **General configuration** → Memory: `128` MB, Timeout: `30` sec → **Save**
+17. **General configuration** â†’ Memory: `128` MB, Timeout: `30` sec â†’ **Save**
 
 ---
 
 ### Lambda 3: `cofre-listar-documentos`
 
-18. **Lambda** → **Create function** → **Author from scratch**
+18. **Lambda** â†’ **Create function** â†’ **Author from scratch**
 19. Preencha:
 
 | Campo | Valor |
@@ -896,7 +859,7 @@ Para cada função Lambda, faça o seguinte no seu computador:
 
 20. **Create function**
 21. Upload do ZIP (lambda_function.py da pasta `listar_documentos` + shared/)
-22. **Configuration** → **Environment variables** → **Edit**:
+22. **Configuration** â†’ **Environment variables** â†’ **Edit**:
 
 | Key | Value |
 |-----|-------|
@@ -904,13 +867,13 @@ Para cada função Lambda, faça o seguinte no seu computador:
 | `PROCESSED_PREFIX` | `processados` |
 
 23. **Save**
-24. **General configuration** → Memory: `128` MB, Timeout: `30` sec → **Save**
+24. **General configuration** â†’ Memory: `128` MB, Timeout: `30` sec â†’ **Save**
 
 ---
 
 ### Lambda 4: `cofre-gerar-url-download`
 
-25. **Lambda** → **Create function** → **Author from scratch**
+25. **Lambda** â†’ **Create function** â†’ **Author from scratch**
 26. Preencha:
 
 | Campo | Valor |
@@ -922,7 +885,7 @@ Para cada função Lambda, faça o seguinte no seu computador:
 
 27. **Create function**
 28. Upload do ZIP (lambda_function.py da pasta `gerar_url_download` + shared/)
-29. **Configuration** → **Environment variables** → **Edit**:
+29. **Configuration** â†’ **Environment variables** â†’ **Edit**:
 
 | Key | Value |
 |-----|-------|
@@ -931,13 +894,13 @@ Para cada função Lambda, faça o seguinte no seu computador:
 | `URL_EXPIRATION_SECONDS` | `300` |
 
 30. **Save**
-31. **General configuration** → Memory: `128` MB, Timeout: `30` sec → **Save**
+31. **General configuration** â†’ Memory: `128` MB, Timeout: `30` sec â†’ **Save**
 
 ---
 
 ### Lambda 5: `cofre-listar-versoes`
 
-32. **Lambda** → **Create function** → **Author from scratch**
+32. **Lambda** â†’ **Create function** â†’ **Author from scratch**
 33. Preencha:
 
 | Campo | Valor |
@@ -949,7 +912,7 @@ Para cada função Lambda, faça o seguinte no seu computador:
 
 34. **Create function**
 35. Upload do ZIP (lambda_function.py da pasta `listar_versoes` + shared/)
-36. **Configuration** → **Environment variables** → **Edit**:
+36. **Configuration** â†’ **Environment variables** â†’ **Edit**:
 
 | Key | Value |
 |-----|-------|
@@ -958,13 +921,13 @@ Para cada função Lambda, faça o seguinte no seu computador:
 | `URL_EXPIRATION_SECONDS` | `300` |
 
 37. **Save**
-38. **General configuration** → Memory: `128` MB, Timeout: `30` sec → **Save**
+38. **General configuration** â†’ Memory: `128` MB, Timeout: `30` sec â†’ **Save**
 
 ---
 
 ### Lambda 6: `cofre-restaurar-documento`
 
-39. **Lambda** → **Create function** → **Author from scratch**
+39. **Lambda** â†’ **Create function** â†’ **Author from scratch**
 40. Preencha:
 
 | Campo | Valor |
@@ -976,7 +939,7 @@ Para cada função Lambda, faça o seguinte no seu computador:
 
 41. **Create function**
 42. Upload do ZIP (lambda_function.py da pasta `restaurar_documento` + shared/)
-43. **Configuration** → **Environment variables** → **Edit**:
+43. **Configuration** â†’ **Environment variables** â†’ **Edit**:
 
 | Key | Value |
 |-----|-------|
@@ -985,15 +948,15 @@ Para cada função Lambda, faça o seguinte no seu computador:
 | `DEFAULT_RESTORE_DAYS` | `2` |
 
 44. **Save**
-45. **General configuration** → Memory: `128` MB, Timeout: `30` sec → **Save**
+45. **General configuration** â†’ Memory: `128` MB, Timeout: `30` sec â†’ **Save**
 
 ---
 
-### Verificação de cada Lambda
+### VerificaÃ§Ã£o de cada Lambda
 
-Para cada Lambda criada, faça um teste rápido:
+Para cada Lambda criada, faÃ§a um teste rÃ¡pido:
 
-1. Na página da função, clique na aba **Test**
+1. Na pÃ¡gina da funÃ§Ã£o, clique na aba **Test**
 2. **Event name**: `teste-basico`
 3. Para as Lambdas de API (todas exceto processar-documento), use este evento de teste:
 
@@ -1016,7 +979,7 @@ Para cada Lambda criada, faça um teste rápido:
 ```
 
 4. Clique em **Test**
-5. **Resultado esperado**: A função deve executar sem erro de importação (pode retornar erro de validação como "campo obrigatório", o que é normal — significa que o código carregou corretamente)
+5. **Resultado esperado**: A funÃ§Ã£o deve executar sem erro de importaÃ§Ã£o (pode retornar erro de validaÃ§Ã£o como "campo obrigatÃ³rio", o que Ã© normal â€” significa que o cÃ³digo carregou corretamente)
 
 Para a Lambda `cofre-processar-documento`, use este evento de teste:
 
@@ -1037,30 +1000,21 @@ Para a Lambda `cofre-processar-documento`, use este evento de teste:
 }
 ```
 
-> **Nota:** Este teste pode falhar com "Access Denied" se o arquivo não existir no bucket — isso é esperado. O importante é que não haja `ImportError` ou `ModuleNotFoundError`.
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| `ModuleNotFoundError: No module named 'shared'` | Pasta shared/ não incluída no ZIP | Refaça o ZIP incluindo a pasta shared/ na raiz |
-| `Runtime.ImportModuleError` | Arquivo principal não se chama `lambda_function.py` | O handler padrão é `lambda_function.lambda_handler` — verifique o nome |
-| Timeout | Timeout muito baixo | Verifique que está em 30 segundos |
-| `Access Denied` no teste | Política IAM incorreta ou bucket name errado | Verifique variáveis de ambiente e políticas |
+> **Nota:** Este teste pode falhar com "Access Denied" se o arquivo nÃ£o existir no bucket â€” isso Ã© esperado. O importante Ã© que nÃ£o haja `ImportError` ou `ModuleNotFoundError`.
 
 ---
 
-## Etapa 8: Configurar Trigger S3 → Lambda processar-documento
+## Etapa 8: Configurar Trigger S3 â†’ Lambda processar-documento
 
-Este trigger faz com que o S3 invoque automaticamente a Lambda `cofre-processar-documento` sempre que um novo objeto é criado no prefixo `entrada/`.
+Este trigger faz com que o S3 invoque automaticamente a Lambda `cofre-processar-documento` sempre que um novo objeto Ã© criado no prefixo `entrada/`.
 
 ### Passo a passo
 
-1. Na barra de busca superior, digite **S3** e acesse o serviço
+1. Na barra de busca superior, digite **S3** e acesse o serviÃ§o
 2. Clique no bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
 3. Clique na aba **Properties** (Propriedades)
-4. Role a página até a seção **Event notifications** (Notificações de eventos)
-5. Clique no botão **Create event notification** (Criar notificação de evento)
+4. Role a pÃ¡gina atÃ© a seÃ§Ã£o **Event notifications** (NotificaÃ§Ãµes de eventos)
+5. Clique no botÃ£o **Create event notification** (Criar notificaÃ§Ã£o de evento)
 6. Preencha:
 
 | Campo | Valor |
@@ -1069,61 +1023,53 @@ Este trigger faz com que o S3 invoque automaticamente a Lambda `cofre-processar-
 | **Prefix** | `entrada/` |
 | **Suffix** | *(deixe vazio)* |
 
-7. Na seção **Event types** (Tipos de evento):
-   - Expanda **Object creation** (Criação de objetos)
-   - Marque ✅ **All object create events** (`s3:ObjectCreated:*`)
+7. Na seÃ§Ã£o **Event types** (Tipos de evento):
+   - Expanda **Object creation** (CriaÃ§Ã£o de objetos)
+   - Marque âœ… **All object create events** (`s3:ObjectCreated:*`)
 
-8. Na seção **Destination** (Destino):
+8. Na seÃ§Ã£o **Destination** (Destino):
    - Selecione **Lambda function**
    - No dropdown **Lambda function**, selecione `cofre-processar-documento`
 
 9. Clique em **Save changes**
 
-### O que acontece por trás
+### O que acontece por trÃ¡s
 
-- O S3 adicionará automaticamente uma **resource-based policy** na função Lambda, permitindo que o S3 a invoque
-- Isso é configurado automaticamente pelo Console — não precisa fazer manualmente
+- O S3 adicionarÃ¡ automaticamente uma **resource-based policy** na funÃ§Ã£o Lambda, permitindo que o S3 a invoque
+- Isso Ã© configurado automaticamente pelo Console â€” nÃ£o precisa fazer manualmente
 
-### Verificação
+### VerificaÃ§Ã£o
 
-1. Volte à aba **Properties** do bucket
-2. Na seção **Event notifications**, você deve ver `trigger-processar-documento` listado
-3. **Teste prático:**
-   - Vá para a aba **Objects** do bucket
-   - Navegue até `entrada/contratos/`
-   - Clique em **Upload** → **Add files** → Selecione um arquivo PDF pequeno → **Upload**
+1. Volte Ã  aba **Properties** do bucket
+2. Na seÃ§Ã£o **Event notifications**, vocÃª deve ver `trigger-processar-documento` listado
+3. **Teste prÃ¡tico:**
+   - VÃ¡ para a aba **Objects** do bucket
+   - Navegue atÃ© `entrada/contratos/`
+   - Clique em **Upload** â†’ **Add files** â†’ Selecione um arquivo PDF pequeno â†’ **Upload**
    - Aguarde 5-10 segundos
-   - Navegue até `processados/contratos/` — o arquivo deve estar lá
+   - Navegue atÃ© `processados/contratos/` â€” o arquivo deve estar lÃ¡
    - O arquivo em `entrada/contratos/` deve ter desaparecido
-4. Se o arquivo não apareceu em processados:
-   - Acesse **Lambda** → `cofre-processar-documento` → **Monitor** → **View CloudWatch logs**
+4. Se o arquivo nÃ£o apareceu em processados:
+   - Acesse **Lambda** â†’ `cofre-processar-documento` â†’ **Monitor** â†’ **View CloudWatch logs**
    - Verifique os logs para identificar o erro
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Unable to validate the following destination configurations" | Lambda não tem permissão para ser invocada pelo S3 | O Console geralmente resolve isso automaticamente; se persistir, vá na Lambda → Configuration → Permissions → Resource-based policy e adicione permissão para s3.amazonaws.com |
-| Arquivo não é processado | Prefixo incorreto no evento | Verifique que o Prefix é exatamente `entrada/` (com barra) |
-| Lambda executa mas dá erro | Variáveis de ambiente incorretas | Verifique DOCUMENT_BUCKET, SOURCE_PREFIX, PROCESSED_PREFIX, REJECTED_PREFIX |
 
 ---
 
 ## Etapa 9: Criar API Gateway HTTP API
 
-A API Gateway expõe as funções Lambda como endpoints HTTP acessíveis pelo frontend. Usaremos uma HTTP API (mais simples e barata que REST API).
+A API Gateway expÃµe as funÃ§Ãµes Lambda como endpoints HTTP acessÃ­veis pelo frontend. Usaremos uma HTTP API (mais simples e barata que REST API).
 
 ### Passo a passo
 
-1. Na barra de busca superior, digite **API Gateway** e clique no serviço
-2. Na página inicial, localize a seção **HTTP API** e clique no botão **Build** (Construir)
+1. Na barra de busca superior, digite **API Gateway** e clique no serviÃ§o
+2. Na pÃ¡gina inicial, localize a seÃ§Ã£o **HTTP API** e clique no botÃ£o **Build** (Construir)
 
 ### Configurar a API
 
 3. Na tela "Create an API":
-   - Clique em **Add integration** (Adicionar integração)
+   - Clique em **Add integration** (Adicionar integraÃ§Ã£o)
    - **Integration type**: Lambda
-   - **AWS Region**: `us-east-1` (sua região)
+   - **AWS Region**: `us-east-1` (sua regiÃ£o)
    - **Lambda function**: Selecione `cofre-gerar-url-upload`
    - Clique em **Add integration** novamente para adicionar as outras:
      - Lambda: `cofre-listar-documentos`
@@ -1131,7 +1077,7 @@ A API Gateway expõe as funções Lambda como endpoints HTTP acessíveis pelo fr
      - Lambda: `cofre-listar-versoes`
      - Lambda: `cofre-restaurar-documento`
    
-   > **Nota:** NÃO adicione `cofre-processar-documento` aqui — ela é acionada pelo S3, não pela API
+   > **Nota:** NÃƒO adicione `cofre-processar-documento` aqui â€” ela Ã© acionada pelo S3, nÃ£o pela API
 
    - **API name**: `cofre-digital-api`
    - Clique em **Next**
@@ -1157,30 +1103,30 @@ A API Gateway expõe as funções Lambda como endpoints HTTP acessíveis pelo fr
 
 6. Na tela "Define stages":
    - **Stage name**: `$default`
-   - **Auto-deploy**: Mantenha ✅ ativado
+   - **Auto-deploy**: Mantenha âœ… ativado
    - Clique em **Next**
 
 ### Revisar e Criar
 
 7. Na tela "Review and create":
-   - Verifique que todas as 5 rotas estão corretas
+   - Verifique que todas as 5 rotas estÃ£o corretas
    - Verifique que cada rota aponta para a Lambda correta
    - Clique em **Create** (Criar)
 
-### Copiar a URL de Invocação
+### Copiar a URL de InvocaÃ§Ã£o
 
-8. Após a criação, você será levado à página da API
-9. No menu lateral esquerdo, clique em **Stages** (se não estiver já visível)
+8. ApÃ³s a criaÃ§Ã£o, vocÃª serÃ¡ levado Ã  pÃ¡gina da API
+9. No menu lateral esquerdo, clique em **Stages** (se nÃ£o estiver jÃ¡ visÃ­vel)
 10. Clique no stage **$default**
 11. **Copie** a **Invoke URL** que aparece no topo (formato: `https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com`)
-12. **Anote esta URL** — ela será usada no config.js do frontend (Etapa 11) e na configuração CORS
+12. **Anote esta URL** â€” ela serÃ¡ usada no config.js do frontend (Etapa 11) e na configuraÃ§Ã£o CORS
 
-> **IMPORTANTE:** A URL NÃO deve ter barra (`/`) no final. Se tiver, remova-a ao colar no config.js.
+> **IMPORTANTE:** A URL NÃƒO deve ter barra (`/`) no final. Se tiver, remova-a ao colar no config.js.
 
 ### Configurar CORS na API Gateway
 
 13. No menu lateral esquerdo da API, clique em **CORS**
-14. Clique em **Configure** (ou **Edit** se já existir configuração)
+14. Clique em **Configure** (ou **Edit** se jÃ¡ existir configuraÃ§Ã£o)
 15. Preencha:
 
 | Campo | Valor |
@@ -1190,17 +1136,17 @@ A API Gateway expõe as funções Lambda como endpoints HTTP acessíveis pelo fr
 | **Access-Control-Allow-Methods** | `GET, POST, OPTIONS` |
 | **Access-Control-Max-Age** | `3600` |
 
-> **ATENÇÃO:** Neste momento, você ainda não tem o domínio CloudFront (será criado na Etapa 12). Por enquanto, use `*` (asterisco) como origin para testes iniciais. Na **Etapa 14**, você voltará aqui para substituir pelo domínio real.
+> **ATENÃ‡ÃƒO:** Neste momento, vocÃª ainda nÃ£o tem o domÃ­nio CloudFront (serÃ¡ criado na Etapa 12). Por enquanto, use `*` (asterisco) como origin para testes iniciais. Na **Etapa 14**, vocÃª voltarÃ¡ aqui para substituir pelo domÃ­nio real.
 
 16. Clique em **Save**
 
-### Verificação
+### VerificaÃ§Ã£o
 
-1. Volte à página principal da API → **Routes**
-2. Você deve ver 5 rotas configuradas
-3. **Teste rápido via navegador:**
+1. Volte Ã  pÃ¡gina principal da API â†’ **Routes**
+2. VocÃª deve ver 5 rotas configuradas
+3. **Teste rÃ¡pido via navegador:**
    - Abra uma nova aba e cole: `<API_GATEWAY_URL>/documentos`
-   - Resultado esperado: Resposta JSON (pode ser lista vazia ou erro de bucket, dependendo de configuração)
+   - Resultado esperado: Resposta JSON (pode ser lista vazia ou erro de bucket, dependendo de configuraÃ§Ã£o)
 4. **Teste com curl (terminal):**
    ```bash
    curl -X POST <API_GATEWAY_URL>/upload-url \
@@ -1209,24 +1155,15 @@ A API Gateway expõe as funções Lambda como endpoints HTTP acessíveis pelo fr
    ```
    - Resultado esperado: JSON com `uploadUrl`, `key` e `expiresIn`
 
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Internal Server Error" | Lambda retornou erro | Verifique CloudWatch Logs da Lambda |
-| Rota retorna 404 | Rota não configurada ou método errado | Verifique routes e métodos (GET vs POST) |
-| Erro CORS no navegador | CORS não configurado | Configure CORS conforme passo 13-16 |
-| "Forbidden" 403 | Payload format version incompatível | HTTP API usa v2.0 por padrão (correto) |
-
 ---
 
 ## Etapa 10: Criar Bucket do Frontend
 
-Este bucket armazenará os arquivos estáticos do frontend (HTML, CSS, JS). Será privado e acessível apenas via CloudFront.
+Este bucket armazenarÃ¡ os arquivos estÃ¡ticos do frontend (HTML, CSS, JS). SerÃ¡ privado e acessÃ­vel apenas via CloudFront.
 
 ### Passo a passo
 
-1. Na barra de busca superior, digite **S3** e acesse o serviço
+1. Na barra de busca superior, digite **S3** e acesse o serviÃ§o
 2. Clique em **Create bucket**
 3. Preencha:
 
@@ -1238,10 +1175,10 @@ Este bucket armazenará os arquivos estáticos do frontend (HTML, CSS, JS). Ser�
 4. **Object Ownership**: Mantenha **ACLs disabled (recommended)**
 
 5. **Block Public Access settings**:
-   - Mantenha ✅ **Block *all* public access**
-   - O bucket será privado — acesso somente via CloudFront com OAC
+   - Mantenha âœ… **Block *all* public access**
+   - O bucket serÃ¡ privado â€” acesso somente via CloudFront com OAC
 
-6. **Bucket Versioning**: Mantenha **Disable** (não necessário para frontend)
+6. **Bucket Versioning**: Mantenha **Disable** (nÃ£o necessÃ¡rio para frontend)
 
 7. **Default encryption**:
    - **Encryption type**: **Server-side encryption with Amazon S3 managed keys (SSE-S3)**
@@ -1254,53 +1191,46 @@ Este bucket armazenará os arquivos estáticos do frontend (HTML, CSS, JS). Ser�
 9. Clique no bucket **cofre-documentos-frontend-<AWS_ACCOUNT_ID>** que acabou de criar
 10. Clique em **Upload**
 11. Clique em **Add files** (Adicionar arquivos)
-12. Selecione os 4 arquivos da pasta `frontend/` deste repositório:
+12. Selecione os 4 arquivos da pasta `frontend/` deste repositÃ³rio:
     - `index.html`
     - `styles.css`
     - `app.js`
     - `config.js`
-13. **IMPORTANTE:** Antes de clicar em Upload, expanda a seção **Properties** (Propriedades):
+13. **IMPORTANTE:** Antes de clicar em Upload, expanda a seÃ§Ã£o **Properties** (Propriedades):
     - Na parte **Content type**, o S3 geralmente detecta automaticamente
-    - Se não detectar, configure manualmente para cada arquivo:
-      - `index.html` → `text/html`
-      - `styles.css` → `text/css`
-      - `app.js` → `application/javascript`
-      - `config.js` → `application/javascript`
+    - Se nÃ£o detectar, configure manualmente para cada arquivo:
+      - `index.html` â†’ `text/html`
+      - `styles.css` â†’ `text/css`
+      - `app.js` â†’ `application/javascript`
+      - `config.js` â†’ `application/javascript`
 14. Clique em **Upload**
-15. Aguarde a confirmação de que todos os 4 arquivos foram carregados com sucesso
+15. Aguarde a confirmaÃ§Ã£o de que todos os 4 arquivos foram carregados com sucesso
 16. Clique em **Close**
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- Na aba **Objects** do bucket, você deve ver os 4 arquivos listados
-- Clique em `index.html` → verifique que o Content type está como `text/html`
-- **Neste momento, o bucket é privado** — tentar acessar via URL do S3 resultará em "Access Denied" (esperado)
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Bucket name already exists" | Nome já em uso globalmente | Verifique se Account ID está correto |
-| Upload falha | Arquivo muito grande ou conexão instável | Frontend são arquivos pequenos (<1MB cada), tente novamente |
+- Na aba **Objects** do bucket, vocÃª deve ver os 4 arquivos listados
+- Clique em `index.html` â†’ verifique que o Content type estÃ¡ como `text/html`
+- **Neste momento, o bucket Ã© privado** â€” tentar acessar via URL do S3 resultarÃ¡ em "Access Denied" (esperado)
 
 ---
 
 ## Etapa 11: Atualizar config.js com a URL da API Gateway
 
-O arquivo `config.js` contém a URL base que o frontend usa para chamar a API. Você precisa substituir o placeholder pela URL real obtida na Etapa 9.
+O arquivo `config.js` contÃ©m a URL base que o frontend usa para chamar a API. VocÃª precisa substituir o placeholder pela URL real obtida na Etapa 9.
 
 ### Passo a passo
 
 1. No seu computador, abra o arquivo `frontend/config.js` em um editor de texto
-2. Substitua `COLE_AQUI_A_URL_DA_API` pela URL de invocação da API Gateway (copiada na Etapa 9)
+2. Substitua `COLE_AQUI_A_URL_DA_API` pela URL de invocaÃ§Ã£o da API Gateway (copiada na Etapa 9)
 3. O arquivo final deve ficar assim:
 
 ```javascript
 /**
- * Configuração do Cofre Digital de Documentos.
+ * ConfiguraÃ§Ã£o do Cofre Digital de Arquivos.
  * 
- * INSTRUÇÕES:
- * Substitua o valor de API_BASE_URL pela URL de invocação
+ * INSTRUÃ‡Ã•ES:
+ * Substitua o valor de API_BASE_URL pela URL de invocaÃ§Ã£o
  * da sua API Gateway HTTP API (sem barra final).
  * 
  * Exemplo: https://abc123def.execute-api.us-east-1.amazonaws.com
@@ -1310,140 +1240,132 @@ window.APP_CONFIG = {
 };
 ```
 
-> **ATENÇÃO:** Não coloque barra `/` no final da URL. O código JavaScript já adiciona as rotas (ex: `/upload-url`, `/documentos`).
+> **ATENÃ‡ÃƒO:** NÃ£o coloque barra `/` no final da URL. O cÃ³digo JavaScript jÃ¡ adiciona as rotas (ex: `/upload-url`, `/documentos`).
 
 ### Re-upload do config.js
 
 4. Acesse o Console S3
 5. Clique no bucket **cofre-documentos-frontend-<AWS_ACCOUNT_ID>**
-6. Você verá o arquivo `config.js` existente na listagem
+6. VocÃª verÃ¡ o arquivo `config.js` existente na listagem
 7. Clique em **Upload**
 8. Clique em **Add files** e selecione o `config.js` atualizado do seu computador
 9. Clique em **Upload**
-10. O S3 substituirá o arquivo anterior automaticamente
+10. O S3 substituirÃ¡ o arquivo anterior automaticamente
 
-### Verificação
+### VerificaÃ§Ã£o
 
 - Clique no arquivo `config.js` no bucket
-- Clique em **Open** (ou no URL do objeto — que retornará "Access Denied" pois o bucket é privado)
-- Para verificar o conteúdo: selecione o arquivo → **Actions** → **Query with S3 Select** (ou baixe o arquivo para verificar localmente)
+- Clique em **Open** (ou no URL do objeto â€” que retornarÃ¡ "Access Denied" pois o bucket Ã© privado)
+- Para verificar o conteÃºdo: selecione o arquivo â†’ **Actions** â†’ **Query with S3 Select** (ou baixe o arquivo para verificar localmente)
 
 ### Alternativa: Editar diretamente no Console
 
-Se preferir não fazer re-upload:
+Se preferir nÃ£o fazer re-upload:
 
 1. No bucket frontend, clique no arquivo `config.js`
-2. Na visualização do objeto, NÃO há editor inline no S3
-3. A forma mais simples é fazer o re-upload conforme descrito acima
+2. Na visualizaÃ§Ã£o do objeto, NÃƒO hÃ¡ editor inline no S3
+3. A forma mais simples Ã© fazer o re-upload conforme descrito acima
 
 ---
 
-## Etapa 12: Criar Distribuição CloudFront
+## Etapa 12: Criar DistribuiÃ§Ã£o CloudFront
 
-O CloudFront é a CDN (Content Delivery Network) que servirá o frontend para os usuários. Ele acessa o bucket privado do frontend usando Origin Access Control (OAC).
+O CloudFront Ã© a CDN (Content Delivery Network) que servirÃ¡ o frontend para os usuÃ¡rios. Ele acessa o bucket privado do frontend usando Origin Access Control (OAC).
 
 ### Passo a passo
 
-1. Na barra de busca superior, digite **CloudFront** e clique no serviço
-2. Clique no botão **Create distribution** (Criar distribuição)
+1. Na barra de busca superior, digite **CloudFront** e clique no serviÃ§o
+2. Clique no botÃ£o **Create distribution** (Criar distribuiÃ§Ã£o)
 
 ### Configurar Origin (Origem)
 
-3. Preencha a seção **Origin**:
+3. Preencha a seÃ§Ã£o **Origin**:
 
 | Campo | Valor |
 |-------|-------|
 | **Origin domain** | Clique no campo e selecione o bucket `cofre-documentos-frontend-<AWS_ACCOUNT_ID>.s3.us-east-1.amazonaws.com` na lista dropdown |
 | **Origin path** | *(deixe vazio)* |
-| **Name** | Será preenchido automaticamente com o nome do bucket |
+| **Name** | SerÃ¡ preenchido automaticamente com o nome do bucket |
 | **Origin access** | Selecione **Origin access control settings (recommended)** |
 
-4. Após selecionar "Origin access control settings", clique no botão **Create new OAC** (Criar novo OAC):
+4. ApÃ³s selecionar "Origin access control settings", clique no botÃ£o **Create new OAC** (Criar novo OAC):
    - **Name**: `cofre-frontend-oac` (ou aceite o nome sugerido)
    - **Description**: `OAC para acesso ao bucket frontend do cofre digital`
    - **Signing behavior**: Mantenha **Sign requests (recommended)**
    - **Origin type**: Mantenha **S3**
    - Clique em **Create**
 
-5. O OAC criado será selecionado automaticamente
+5. O OAC criado serÃ¡ selecionado automaticamente
 
 ### Configurar Default Cache Behavior
 
-6. Role até a seção **Default cache behavior**:
+6. Role atÃ© a seÃ§Ã£o **Default cache behavior**:
 
 | Campo | Valor |
 |-------|-------|
-| **Compress objects automatically** | ✅ Yes |
+| **Compress objects automatically** | âœ… Yes |
 | **Viewer protocol policy** | **Redirect HTTP to HTTPS** |
 | **Allowed HTTP methods** | **GET, HEAD** |
-| **Cache policy** | Selecione **CachingOptimized** (recomendado para estáticos) |
+| **Cache policy** | Selecione **CachingOptimized** (recomendado para estÃ¡ticos) |
 
 7. **Restrict viewer access**: Mantenha **No**
 
 ### Configurar Settings
 
-8. Role até a seção **Settings** (no final da página):
+8. Role atÃ© a seÃ§Ã£o **Settings** (no final da pÃ¡gina):
 
 | Campo | Valor |
 |-------|-------|
 | **Price class** | **Use all edge locations (best performance)** ou **Use only North America and Europe** (para economizar) |
-| **AWS WAF** | **Do not enable security protections** (para projeto educacional) |
-| **Alternate domain name (CNAME)** | *(deixe vazio — usaremos o domínio .cloudfront.net)* |
+| **AWS WAF** | **Do not enable security protections** (pode ser habilitado posteriormente) |
+| **Alternate domain name (CNAME)** | *(deixe vazio â€” usaremos o domÃ­nio .cloudfront.net)* |
 | **Custom SSL certificate** | *(deixe vazio)* |
 | **Default root object** | `index.html` |
-| **Description** | `Distribuição CloudFront para frontend do Cofre Digital` |
+| **Description** | `DistribuiÃ§Ã£o CloudFront para frontend do Cofre Digital` |
 
-9. Clique no botão laranja **Create distribution**
+9. Clique no botÃ£o laranja **Create distribution**
 
-### Copiar informações importantes
+### Copiar informaÃ§Ãµes importantes
 
-10. Após criar, você será levado à página da distribuição
+10. ApÃ³s criar, vocÃª serÃ¡ levado Ã  pÃ¡gina da distribuiÃ§Ã£o
 11. **Copie e anote:**
-    - **Distribution domain name**: `dXXXXXXXXXXXXX.cloudfront.net` — este é o `<DOMINIO_CLOUDFRONT>`
-    - **Distribution ID**: `E1A2B3C4D5E6F7` — este é o `<DISTRIBUTION_ID>`
+    - **Distribution domain name**: `dXXXXXXXXXXXXX.cloudfront.net` â€” este Ã© o `<DOMINIO_CLOUDFRONT>`
+    - **Distribution ID**: `E1A2B3C4D5E6F7` â€” este Ã© o `<DISTRIBUTION_ID>`
     - **ARN**: `arn:aws:cloudfront::<AWS_ACCOUNT_ID>:distribution/EXXXXXXXXXXXXXX`
 
-12. **Status**: A distribuição levará **5-15 minutos** para ser implantada. O status mudará de "Deploying" para "Enabled"
+12. **Status**: A distribuiÃ§Ã£o levarÃ¡ **5-15 minutos** para ser implantada. O status mudarÃ¡ de "Deploying" para "Enabled"
 
 ### Banner de Bucket Policy
 
-13. Logo após criar a distribuição, o Console exibirá um **banner azul** no topo dizendo:
+13. Logo apÃ³s criar a distribuiÃ§Ã£o, o Console exibirÃ¡ um **banner azul** no topo dizendo:
     > "The S3 bucket policy needs to be updated"
     
-14. Clique no botão **Copy policy** neste banner
-15. **Guarde esta política copiada** — ela será usada na Etapa 13
+14. Clique no botÃ£o **Copy policy** neste banner
+15. **Guarde esta polÃ­tica copiada** â€” ela serÃ¡ usada na Etapa 13
 
-> **Se o banner desapareceu:** Vá em CloudFront → sua distribuição → aba **Origins** → selecione a origin → **Edit** → Na seção "Origin access", o botão "Copy policy" estará disponível.
+> **Se o banner desapareceu:** VÃ¡ em CloudFront â†’ sua distribuiÃ§Ã£o â†’ aba **Origins** â†’ selecione a origin â†’ **Edit** â†’ Na seÃ§Ã£o "Origin access", o botÃ£o "Copy policy" estarÃ¡ disponÃ­vel.
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- Após 5-15 minutos, o Status deve mudar para **Enabled** (data de "Last modified" aparece)
-- **Ainda não funcionará** — a bucket policy do frontend precisa ser atualizada (Etapa 13)
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Access Denied" ao acessar domínio CloudFront | Bucket policy não foi atualizada | Complete a Etapa 13 |
-| Distribuição demora mais de 30 min | Normal em alguns casos | Aguarde; verifique se não há erro na configuração |
-| "Default root object" não funciona | Campo não preenchido | Edite a distribuição e adicione `index.html` |
+- ApÃ³s 5-15 minutos, o Status deve mudar para **Enabled** (data de "Last modified" aparece)
+- **Ainda nÃ£o funcionarÃ¡** â€” a bucket policy do frontend precisa ser atualizada (Etapa 13)
 
 ---
 
 ## Etapa 13: Aplicar Bucket Policy do Frontend
 
-O CloudFront precisa de permissão para ler os objetos do bucket privado do frontend. A bucket policy gerada na Etapa 12 concede essa permissão via Origin Access Control (OAC).
+O CloudFront precisa de permissÃ£o para ler os objetos do bucket privado do frontend. A bucket policy gerada na Etapa 12 concede essa permissÃ£o via Origin Access Control (OAC).
 
 ### Passo a passo
 
-1. Na barra de busca superior, digite **S3** e acesse o serviço
+1. Na barra de busca superior, digite **S3** e acesse o serviÃ§o
 2. Clique no bucket **cofre-documentos-frontend-<AWS_ACCOUNT_ID>**
-3. Clique na aba **Permissions** (Permissões)
-4. Role até a seção **Bucket policy**
+3. Clique na aba **Permissions** (PermissÃµes)
+4. Role atÃ© a seÃ§Ã£o **Bucket policy**
 5. Clique em **Edit** (Editar)
-6. Cole a política que você copiou do banner do CloudFront (Etapa 12, passo 14)
+6. Cole a polÃ­tica que vocÃª copiou do banner do CloudFront (Etapa 12, passo 14)
 
-A política deve ser semelhante a esta (arquivo `s3/bucket-policy-frontend.json` do repositório):
+A polÃ­tica deve ser semelhante a esta (arquivo `s3/bucket-policy-frontend.json` do repositÃ³rio):
 
 ```json
 {
@@ -1467,51 +1389,43 @@ A política deve ser semelhante a esta (arquivo `s3/bucket-policy-frontend.json`
 }
 ```
 
-> **IMPORTANTE:** Use a política copiada diretamente do Console do CloudFront (passo 14 da Etapa 12), pois ela já contém os valores corretos do seu Distribution ID. Se estiver usando o template acima, substitua `<AWS_ACCOUNT_ID>`, `<DISTRIBUTION_ID>` e o nome do bucket.
+> **IMPORTANTE:** Use a polÃ­tica copiada diretamente do Console do CloudFront (passo 14 da Etapa 12), pois ela jÃ¡ contÃ©m os valores corretos do seu Distribution ID. Se estiver usando o template acima, substitua `<AWS_ACCOUNT_ID>`, `<DISTRIBUTION_ID>` e o nome do bucket.
 
 7. Clique em **Save changes**
 
-### Explicação da política
+### ExplicaÃ§Ã£o da polÃ­tica
 
 | Elemento | Significado |
 |----------|-------------|
-| `Principal: cloudfront.amazonaws.com` | Apenas o serviço CloudFront pode ler |
+| `Principal: cloudfront.amazonaws.com` | Apenas o serviÃ§o CloudFront pode ler |
 | `Action: s3:GetObject` | Permite apenas leitura de objetos |
 | `Resource: .../*` | Aplica a todos os objetos no bucket |
-| `Condition: AWS:SourceArn` | Restringe ao seu Distribution ID específico — outras distribuições CloudFront NÃO terão acesso |
+| `Condition: AWS:SourceArn` | Restringe ao seu Distribution ID especÃ­fico â€” outras distribuiÃ§Ãµes CloudFront NÃƒO terÃ£o acesso |
 
-### Verificação
+### VerificaÃ§Ã£o
 
-1. Aguarde a distribuição CloudFront finalizar o deploy (Status: "Enabled")
+1. Aguarde a distribuiÃ§Ã£o CloudFront finalizar o deploy (Status: "Enabled")
 2. Abra uma nova aba do navegador
-3. Cole o domínio CloudFront: `https://dXXXXXXXXXXXXX.cloudfront.net`
-4. **Resultado esperado:** A página do Cofre Digital deve carregar (HTML com estilos)
+3. Cole o domÃ­nio CloudFront: `https://dXXXXXXXXXXXXX.cloudfront.net`
+4. **Resultado esperado:** A pÃ¡gina do Cofre Digital deve carregar (HTML com estilos)
 5. Se aparecer o erro "AccessDenied" em XML:
    - Verifique que a bucket policy foi salva corretamente
-   - Verifique que o "Default root object" está como `index.html` na distribuição CloudFront
-   - Aguarde mais alguns minutos para propagação
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Access Denied" persistente | Policy não foi salva ou Distribution ID está errado | Copie a policy novamente do CloudFront |
-| Página em branco | index.html não foi carregado no bucket | Verifique os arquivos na Etapa 10 |
-| CSS/JS não carrega | Content-Type incorreto nos arquivos | Faça re-upload com os Content-Types corretos |
+   - Verifique que o "Default root object" estÃ¡ como `index.html` na distribuiÃ§Ã£o CloudFront
+   - Aguarde mais alguns minutos para propagaÃ§Ã£o
 
 ---
 
-## Etapa 14: Atualizar CORS com Domínio CloudFront Real
+## Etapa 14: Atualizar CORS com DomÃ­nio CloudFront Real
 
-Agora que você tem o domínio real do CloudFront, é necessário atualizar o CORS do bucket de documentos e o CORS da API Gateway com o domínio correto.
+Agora que vocÃª tem o domÃ­nio real do CloudFront, Ã© necessÃ¡rio atualizar o CORS do bucket de documentos e o CORS da API Gateway com o domÃ­nio correto.
 
-### 14.1 — Atualizar CORS do Bucket de Documentos
+### 14.1 â€” Atualizar CORS do Bucket de Documentos
 
 1. No Console S3, clique no bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
-2. Clique na aba **Permissions** (Permissões)
-3. Role até **Cross-origin resource sharing (CORS)**
+2. Clique na aba **Permissions** (PermissÃµes)
+3. Role atÃ© **Cross-origin resource sharing (CORS)**
 4. Clique em **Edit**
-5. Substitua o valor de `AllowedOrigins` pelo domínio real:
+5. Substitua o valor de `AllowedOrigins` pelo domÃ­nio real:
 
 ```json
 [
@@ -1536,67 +1450,59 @@ Agora que você tem o domínio real do CloudFront, é necessário atualizar o CO
 ]
 ```
 
-6. **Substitua** `dXXXXXXXXXXXXX.cloudfront.net` pelo domínio real anotado na Etapa 12
+6. **Substitua** `dXXXXXXXXXXXXX.cloudfront.net` pelo domÃ­nio real anotado na Etapa 12
 7. Clique em **Save changes**
 
-### 14.2 — Atualizar CORS da API Gateway
+### 14.2 â€” Atualizar CORS da API Gateway
 
-8. Na barra de busca, digite **API Gateway** e acesse o serviço
+8. Na barra de busca, digite **API Gateway** e acesse o serviÃ§o
 9. Clique na API **cofre-digital-api**
 10. No menu lateral esquerdo, clique em **CORS**
-11. Clique em **Edit** (se já configurou antes) ou **Configure**
+11. Clique em **Edit** (se jÃ¡ configurou antes) ou **Configure**
 12. Atualize:
 
 | Campo | Valor |
 |-------|-------|
-| **Access-Control-Allow-Origin** | `https://dXXXXXXXXXXXXX.cloudfront.net` (seu domínio real) |
+| **Access-Control-Allow-Origin** | `https://dXXXXXXXXXXXXX.cloudfront.net` (seu domÃ­nio real) |
 | **Access-Control-Allow-Headers** | `content-type` |
 | **Access-Control-Allow-Methods** | `GET, POST, OPTIONS` |
 | **Access-Control-Max-Age** | `3600` |
 
-> **IMPORTANTE:** Se antes você colocou `*` (asterisco) como origin para testes, agora é hora de substituir pelo domínio real. Manter `*` funciona mas é menos seguro.
+> **IMPORTANTE:** Se antes vocÃª colocou `*` (asterisco) como origin para testes, agora Ã© hora de substituir pelo domÃ­nio real. Manter `*` funciona mas Ã© menos seguro.
 
 13. Clique em **Save**
 
-### Verificação
+### VerificaÃ§Ã£o
 
-1. Abra o DevTools do navegador (F12) → aba **Console**
+1. Abra o DevTools do navegador (F12) â†’ aba **Console**
 2. Acesse `https://dXXXXXXXXXXXXX.cloudfront.net`
 3. Tente fazer um upload no Cofre Digital
-4. Se o CORS estiver correto, **não haverá erros CORS** no console do navegador
+4. Se o CORS estiver correto, **nÃ£o haverÃ¡ erros CORS** no console do navegador
 5. Se aparecer erro tipo `Access to fetch at '...' from origin '...' has been blocked by CORS policy`:
-   - Verifique que o domínio no CORS do S3 **e** da API Gateway bate exatamente com o domínio do CloudFront
+   - Verifique que o domÃ­nio no CORS do S3 **e** da API Gateway bate exatamente com o domÃ­nio do CloudFront
    - Inclua o protocolo `https://` no valor
-   - **Não coloque barra `/` no final** do domínio
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| CORS error no upload | CORS do bucket S3 com domínio errado | Verifique AllowedOrigins no S3 |
-| CORS error na listagem | CORS da API Gateway com domínio errado | Verifique Allow-Origin na API Gateway |
-| "No 'Access-Control-Allow-Origin' header" | Domínio não bate exatamente | O domínio deve ser idêntico incluindo `https://` |
+   - **NÃ£o coloque barra `/` no final** do domÃ­nio
 
 ---
 
-## Etapa 15: Criar Invalidação no CloudFront
+## Etapa 15: Criar InvalidaÃ§Ã£o no CloudFront
 
-Quando você atualiza arquivos no bucket do frontend (como o config.js), o CloudFront pode continuar servindo a versão antiga do cache. Uma invalidação força o CloudFront a buscar os arquivos mais recentes do S3.
+Quando vocÃª atualiza arquivos no bucket do frontend (como o config.js), o CloudFront pode continuar servindo a versÃ£o antiga do cache. Uma invalidaÃ§Ã£o forÃ§a o CloudFront a buscar os arquivos mais recentes do S3.
 
 ### Passo a passo
 
-1. Na barra de busca superior, digite **CloudFront** e acesse o serviço
-2. Clique na sua distribuição (identificada pelo domínio `dXXXXXXXXXXXXX.cloudfront.net`)
-3. Clique na aba **Invalidations** (Invalidações)
-4. Clique no botão **Create invalidation** (Criar invalidação)
+1. Na barra de busca superior, digite **CloudFront** e acesse o serviÃ§o
+2. Clique na sua distribuiÃ§Ã£o (identificada pelo domÃ­nio `dXXXXXXXXXXXXX.cloudfront.net`)
+3. Clique na aba **Invalidations** (InvalidaÃ§Ãµes)
+4. Clique no botÃ£o **Create invalidation** (Criar invalidaÃ§Ã£o)
 5. No campo **Object paths** (Caminhos dos objetos), digite:
    ```
    /*
    ```
-   (barra asterisco — invalida TODOS os arquivos)
+   (barra asterisco â€” invalida TODOS os arquivos)
 6. Clique em **Create invalidation**
 
-### Explicação
+### ExplicaÃ§Ã£o
 
 | Path | Efeito |
 |------|--------|
@@ -1604,45 +1510,38 @@ Quando você atualiza arquivos no bucket do frontend (como o config.js), o Cloud
 | `/config.js` | Invalida apenas o config.js (mais preciso) |
 | `/index.html` | Invalida apenas o HTML |
 
-> **Custo:** As primeiras 1.000 paths de invalidação por mês são gratuitas. Usar `/*` conta como 1 path.
+> **Custo:** As primeiras 1.000 paths de invalidaÃ§Ã£o por mÃªs sÃ£o gratuitas. Usar `/*` conta como 1 path.
 
-### Quando usar invalidação
+### Quando usar invalidaÃ§Ã£o
 
-- Após atualizar `config.js` com a URL da API (Etapa 11)
-- Após atualizar qualquer arquivo do frontend
-- Se o navegador mostra uma versão antiga da página
+- ApÃ³s atualizar `config.js` com a URL da API (Etapa 11)
+- ApÃ³s atualizar qualquer arquivo do frontend
+- Se o navegador mostra uma versÃ£o antiga da pÃ¡gina
 
-### Verificação
+### VerificaÃ§Ã£o
 
-1. O status da invalidação mudará de **In Progress** para **Completed** (leva 1-5 minutos)
-2. Após completar, abra o site em uma janela anônima/privada: `https://dXXXXXXXXXXXXX.cloudfront.net`
-3. O frontend deve carregar com a versão mais recente dos arquivos
-4. Verifique no DevTools (F12 → aba Network) que os arquivos não estão vindo do cache antigo
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| Invalidação fica em "In Progress" muito tempo | Normal, pode levar até 15 min | Aguarde |
-| Arquivo antigo ainda aparece | Cache do navegador local | Use Ctrl+Shift+R (hard refresh) ou janela anônima |
+1. O status da invalidaÃ§Ã£o mudarÃ¡ de **In Progress** para **Completed** (leva 1-5 minutos)
+2. ApÃ³s completar, abra o site em uma janela anÃ´nima/privada: `https://dXXXXXXXXXXXXX.cloudfront.net`
+3. O frontend deve carregar com a versÃ£o mais recente dos arquivos
+4. Verifique no DevTools (F12 â†’ aba Network) que os arquivos nÃ£o estÃ£o vindo do cache antigo
 
 ---
 
 ## Etapa 16: Configurar Regras de Lifecycle (Ciclo de Vida)
 
-As regras de Lifecycle automatizam a transição de objetos entre classes de armazenamento e a expiração de objetos antigos. O S3 executa essas regras automaticamente (geralmente uma vez por dia).
+As regras de Lifecycle automatizam a transiÃ§Ã£o de objetos entre classes de armazenamento e a expiraÃ§Ã£o de objetos antigos. O S3 executa essas regras automaticamente (geralmente uma vez por dia).
 
 ### Passo a passo
 
 1. No Console S3, clique no bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
 2. Clique na aba **Management** (Gerenciamento)
-3. Na seção **Lifecycle rules** (Regras de ciclo de vida), clique em **Create lifecycle rule**
+3. Na seÃ§Ã£o **Lifecycle rules** (Regras de ciclo de vida), clique em **Create lifecycle rule**
 
 ---
 
 ### Regra 1: `arquivar-documentos-processados`
 
-Esta regra transiciona documentos processados para classes mais baratas ao longo do tempo e os expira após 2 anos.
+Esta regra transiciona documentos processados para classes mais baratas ao longo do tempo e os expira apÃ³s 2 anos.
 
 4. Preencha:
 
@@ -1651,15 +1550,15 @@ Esta regra transiciona documentos processados para classes mais baratas ao longo
 | **Lifecycle rule name** | `arquivar-documentos-processados` |
 | **Choose a rule scope** | Selecione **Limit the scope of this rule using one or more filters** |
 | **Prefix** | `processados/` |
-| **Object size** | Marque ✅ **Specify minimum object size** → `128` KB (131072 bytes) |
+| **Object size** | Marque âœ… **Specify minimum object size** â†’ `128` KB (131072 bytes) |
 
-> **Por que filtrar por tamanho?** Objetos muito pequenos (<128KB) não se beneficiam de transição para Glacier — o custo mínimo por objeto pode ser maior que a economia.
+> **Por que filtrar por tamanho?** Objetos muito pequenos (<128KB) nÃ£o se beneficiam de transiÃ§Ã£o para Glacier â€” o custo mÃ­nimo por objeto pode ser maior que a economia.
 
-5. Na seção **Lifecycle rule actions**, marque ✅:
-   - ✅ **Move current versions of objects between storage classes**
-   - ✅ **Expire current versions of objects**
+5. Na seÃ§Ã£o **Lifecycle rule actions**, marque âœ…:
+   - âœ… **Move current versions of objects between storage classes**
+   - âœ… **Expire current versions of objects**
 
-6. Na seção **Transition current versions of objects between storage classes**:
+6. Na seÃ§Ã£o **Transition current versions of objects between storage classes**:
    - Clique em **Add transition**:
      - **Storage class**: `Intelligent-Tiering`
      - **Days after object creation**: `30`
@@ -1670,10 +1569,10 @@ Esta regra transiciona documentos processados para classes mais baratas ao longo
      - **Storage class**: `Glacier Deep Archive`
      - **Days after object creation**: `365`
 
-7. Na seção **Expire current versions of objects**:
+7. Na seÃ§Ã£o **Expire current versions of objects**:
    - **Days after object creation**: `730`
 
-8. Marque ✅ **I acknowledge that this lifecycle rule will apply to all objects in the bucket matching the specified filter**
+8. Marque âœ… **I acknowledge that this lifecycle rule will apply to all objects in the bucket matching the specified filter**
 
 9. Clique em **Create rule**
 
@@ -1681,7 +1580,7 @@ Esta regra transiciona documentos processados para classes mais baratas ao longo
 
 ### Regra 2: `excluir-arquivos-temporarios`
 
-Esta regra expira automaticamente objetos temporários após 7 dias.
+Esta regra expira automaticamente objetos temporÃ¡rios apÃ³s 7 dias.
 
 10. Clique em **Create lifecycle rule** novamente
 11. Preencha:
@@ -1692,28 +1591,28 @@ Esta regra expira automaticamente objetos temporários após 7 dias.
 | **Choose a rule scope** | **Limit the scope of this rule using one or more filters** |
 | **Prefix** | `temporarios/` |
 
-12. Na seção **Lifecycle rule actions**, marque ✅:
-    - ✅ **Expire current versions of objects**
-    - ✅ **Permanently delete noncurrent versions of objects**
-    - ✅ **Delete expired object delete markers or incomplete multipart uploads**
+12. Na seÃ§Ã£o **Lifecycle rule actions**, marque âœ…:
+    - âœ… **Expire current versions of objects**
+    - âœ… **Permanently delete noncurrent versions of objects**
+    - âœ… **Delete expired object delete markers or incomplete multipart uploads**
 
-13. Na seção **Expire current versions of objects**:
+13. Na seÃ§Ã£o **Expire current versions of objects**:
     - **Days after object creation**: `7`
 
-14. Na seção **Permanently delete noncurrent versions of objects**:
+14. Na seÃ§Ã£o **Permanently delete noncurrent versions of objects**:
     - **Days after objects become noncurrent**: `7`
 
-15. Na seção **Delete expired object delete markers or incomplete multipart uploads**:
-    - Marque ✅ **Delete incomplete multipart uploads**
+15. Na seÃ§Ã£o **Delete expired object delete markers or incomplete multipart uploads**:
+    - Marque âœ… **Delete incomplete multipart uploads**
     - **Number of days**: `1`
 
-16. Marque ✅ o acknowledgment e clique em **Create rule**
+16. Marque âœ… o acknowledgment e clique em **Create rule**
 
 ---
 
 ### Regra 3: `limpar-versoes-antigas`
 
-Esta regra remove versões não-correntes de documentos processados após 90 dias e limpa delete markers expirados.
+Esta regra remove versÃµes nÃ£o-correntes de documentos processados apÃ³s 90 dias e limpa delete markers expirados.
 
 17. Clique em **Create lifecycle rule** novamente
 18. Preencha:
@@ -1724,297 +1623,281 @@ Esta regra remove versões não-correntes de documentos processados após 90 dia
 | **Choose a rule scope** | **Limit the scope of this rule using one or more filters** |
 | **Prefix** | `processados/` |
 
-19. Na seção **Lifecycle rule actions**, marque ✅:
-    - ✅ **Permanently delete noncurrent versions of objects**
-    - ✅ **Delete expired object delete markers or incomplete multipart uploads**
+19. Na seÃ§Ã£o **Lifecycle rule actions**, marque âœ…:
+    - âœ… **Permanently delete noncurrent versions of objects**
+    - âœ… **Delete expired object delete markers or incomplete multipart uploads**
 
-20. Na seção **Permanently delete noncurrent versions of objects**:
+20. Na seÃ§Ã£o **Permanently delete noncurrent versions of objects**:
     - **Days after objects become noncurrent**: `90`
 
-21. Na seção **Delete expired object delete markers or incomplete multipart uploads**:
-    - Marque ✅ **Delete expired object delete markers**
+21. Na seÃ§Ã£o **Delete expired object delete markers or incomplete multipart uploads**:
+    - Marque âœ… **Delete expired object delete markers**
 
-22. Marque ✅ o acknowledgment e clique em **Create rule**
+22. Marque âœ… o acknowledgment e clique em **Create rule**
 
 ---
 
-### Verificação
+### VerificaÃ§Ã£o
 
-- Na aba **Management** do bucket, a seção **Lifecycle rules** deve listar 3 regras:
-  1. `arquivar-documentos-processados` — Status: Enabled
-  2. `excluir-arquivos-temporarios` — Status: Enabled
-  3. `limpar-versoes-antigas` — Status: Enabled
+- Na aba **Management** do bucket, a seÃ§Ã£o **Lifecycle rules** deve listar 3 regras:
+  1. `arquivar-documentos-processados` â€” Status: Enabled
+  2. `excluir-arquivos-temporarios` â€” Status: Enabled
+  3. `limpar-versoes-antigas` â€” Status: Enabled
 
 ### Nota importante sobre Lifecycle
 
-> ⚠️ **As regras de Lifecycle NÃO são instantâneas.** O S3 executa as avaliações de Lifecycle aproximadamente uma vez por dia, em um horário não determinístico. Isso significa:
-> - Após criar a regra, os objetos **não serão movidos/expirados imediatamente**
-> - Pode levar até 48 horas para a primeira execução
-> - Para testar transições de classe, use o método manual descrito na Etapa 18 (Laboratório)
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Overlapping lifecycle rules" (warning) | Duas regras no mesmo prefixo com ações conflitantes | Normal para regras 1 e 3 (uma transiciona, outra limpa versões) — pode ignorar |
-| Transição não acontece | Lifecycle ainda não executou | Aguarde 24-48h |
-| "Minimum days for transition" | Transição para Glacier requer mínimo 30 dias após Standard | Verifique a sequência de dias |
+> âš ï¸ **As regras de Lifecycle NÃƒO sÃ£o instantÃ¢neas.** O S3 executa as avaliaÃ§Ãµes de Lifecycle aproximadamente uma vez por dia, em um horÃ¡rio nÃ£o determinÃ­stico. Isso significa:
+> - ApÃ³s criar a regra, os objetos **nÃ£o serÃ£o movidos/expirados imediatamente**
+> - Pode levar atÃ© 48 horas para a primeira execuÃ§Ã£o
+> - Para testar transiÃ§Ãµes de classe, use o mÃ©todo manual descrito na Etapa 18 (Classes de Armazenamento)
 
 ---
 
 ## Etapa 17: Testar o Projeto
 
-Agora que todos os recursos estão criados e configurados, vamos validar o funcionamento completo do sistema.
+Agora que todos os recursos estÃ£o criados e configurados, vamos validar o funcionamento completo do sistema.
 
-### 17.1 — Acessar o Frontend
+### 17.1 â€” Acessar o Frontend
 
 1. Abra o navegador e acesse: `https://<DOMINIO_CLOUDFRONT>`
-2. **Resultado esperado:** A página do Cofre Digital carrega com:
-   - Header "Cofre Digital de Documentos"
-   - Área de upload (campo de arquivo, dropdown de categoria, botão enviar)
+2. **Resultado esperado:** A pÃ¡gina do Cofre Digital carrega com:
+   - Header "Cofre Digital de Arquivos"
+   - Ãrea de upload (campo de arquivo, dropdown de categoria, botÃ£o enviar)
    - Tabela de documentos (pode estar vazia)
    - Cards educacionais sobre classes de armazenamento
 
-3. Abra o DevTools (F12) → aba **Console**
-4. **Não deve haver erros em vermelho.** Se houver erros CORS ou de rede, revise as Etapas 11 e 14
+3. Abra o DevTools (F12) â†’ aba **Console**
+4. **NÃ£o deve haver erros em vermelho.** Se houver erros CORS ou de rede, revise as Etapas 11 e 14
 
 ---
 
-### 17.2 — Testar Upload de Documento
+### 17.2 â€” Testar Upload de Documento
 
 5. Na interface do Cofre Digital:
    - Clique em **Escolher arquivo** (ou "Browse")
-   - Selecione um arquivo PDF pequeno (ou TXT, PNG — qualquer extensão válida)
+   - Selecione um arquivo PDF pequeno (ou TXT, PNG â€” qualquer extensÃ£o vÃ¡lida)
    - No dropdown de **Categoria**, selecione `contratos`
    - Clique em **Enviar** (ou "Upload")
 
 6. **Resultado esperado:**
    - Mensagem de sucesso aparece
-   - O documento deve aparecer na tabela de documentos após alguns segundos
-   - No DevTools → Network: você deve ver:
-     - `POST /upload-url` → 200 (obtém URL pré-assinada)
-     - `PUT https://...s3...amazonaws.com/entrada/contratos/...` → 200 (upload direto ao S3)
+   - O documento deve aparecer na tabela de documentos apÃ³s alguns segundos
+   - No DevTools â†’ Network: vocÃª deve ver:
+     - `POST /upload-url` â†’ 200 (obtÃ©m URL prÃ©-assinada)
+     - `PUT https://...s3...amazonaws.com/entrada/contratos/...` â†’ 200 (upload direto ao S3)
 
-7. **Verificação no Console S3:**
+7. **VerificaÃ§Ã£o no Console S3:**
    - Acesse o bucket de documentos no Console S3
-   - Navegue até `processados/contratos/`
-   - O arquivo deve estar lá (foi processado automaticamente pela Lambda)
+   - Navegue atÃ© `processados/contratos/`
+   - O arquivo deve estar lÃ¡ (foi processado automaticamente pela Lambda)
    - `entrada/contratos/` deve estar vazio (arquivo foi movido)
 
 ---
 
-### 17.3 — Verificar Logs no CloudWatch
+### 17.3 â€” Verificar Logs no CloudWatch
 
-8. Na barra de busca, digite **CloudWatch** e acesse o serviço
+8. Na barra de busca, digite **CloudWatch** e acesse o serviÃ§o
 9. No menu lateral, clique em **Log groups** (Grupos de log)
-10. Você deve ver grupos como:
+10. VocÃª deve ver grupos como:
     - `/aws/lambda/cofre-gerar-url-upload`
     - `/aws/lambda/cofre-processar-documento`
 11. Clique em `/aws/lambda/cofre-processar-documento`
 12. Clique no log stream mais recente
 13. **Resultado esperado:** Logs mostrando:
     - "Processando objeto: bucket=..., key=entrada/contratos/..."
-    - "Documento válido. Copiando..."
+    - "Documento vÃ¡lido. Copiando..."
     - "Objeto copiado para: processados/contratos/..."
     - "Objeto original removido: entrada/contratos/..."
 
 ---
 
-### 17.4 — Testar Download
+### 17.4 â€” Testar Download
 
 14. Na interface do Cofre Digital, na tabela de documentos:
-    - Localize o documento que você enviou
-    - Clique no botão **Download** (ícone de download ou link)
+    - Localize o documento que vocÃª enviou
+    - Clique no botÃ£o **Download** (Ã­cone de download ou link)
 
 15. **Resultado esperado:**
     - O download inicia automaticamente
-    - O arquivo baixado deve ser idêntico ao original
+    - O arquivo baixado deve ser idÃªntico ao original
 
-16. **Verificação no DevTools:**
-    - `GET /download-url?key=processados/contratos/...` → 200 (obtém URL pré-assinada)
-    - Redirecionamento para URL do S3 → download do arquivo
+16. **VerificaÃ§Ã£o no DevTools:**
+    - `GET /download-url?key=processados/contratos/...` â†’ 200 (obtÃ©m URL prÃ©-assinada)
+    - Redirecionamento para URL do S3 â†’ download do arquivo
 
 ---
 
-### 17.5 — Testar Versionamento
+### 17.5 â€” Testar Versionamento
 
-17. Faça upload do **mesmo arquivo** novamente (mesmo nome, mesma categoria)
-18. Na tabela de documentos, clique em **Versões** (botão de versões) ao lado do documento
+17. FaÃ§a upload do **mesmo arquivo** novamente (mesmo nome, mesma categoria)
+18. Na tabela de documentos, clique em **VersÃµes** (botÃ£o de versÃµes) ao lado do documento
 19. **Resultado esperado:**
-    - Aparece uma lista com 2 versões
-    - Cada versão mostra: ID da versão, data, tamanho
-    - A versão mais recente está marcada como "Atual" (isLatest: true)
+    - Aparece uma lista com 2 versÃµes
+    - Cada versÃ£o mostra: ID da versÃ£o, data, tamanho
+    - A versÃ£o mais recente estÃ¡ marcada como "Atual" (isLatest: true)
 
-20. **Verificação no Console S3:**
+20. **VerificaÃ§Ã£o no Console S3:**
     - Clique no objeto em `processados/contratos/`
     - Clique na aba **Versions**
-    - Deve haver 2 versões listadas com IDs diferentes
+    - Deve haver 2 versÃµes listadas com IDs diferentes
 
 ---
 
-### 17.6 — Testar Upload Inválido
+### 17.6 â€” Testar Upload InvÃ¡lido
 
-21. Tente fazer upload de um arquivo com extensão `.exe` ou `.bat`
-22. **Resultado esperado:** Mensagem de erro: "Extensão não permitida. Extensões válidas: pdf, png, jpg, jpeg, csv, xlsx, txt"
-23. O arquivo NÃO deve ser enviado ao S3
+21. Tente fazer upload de um arquivo com extensÃ£o `.exe` ou `.bat`
+22. **Resultado esperado:** Mensagem de erro: "ExtensÃ£o nÃ£o permitida. ExtensÃµes vÃ¡lidas: pdf, png, jpg, jpeg, csv, xlsx, txt"
+23. O arquivo NÃƒO deve ser enviado ao S3
 
 ---
 
-### 17.7 — Resumo da Validação
+### 17.7 â€” Resumo da ValidaÃ§Ã£o
 
 | Teste | Status Esperado |
 |-------|----------------|
-| Frontend carrega | ✅ Página exibe corretamente |
-| Upload de arquivo válido | ✅ Arquivo aparece em processados/ |
-| Processamento automático | ✅ Lambda move de entrada/ para processados/ |
-| Listagem de documentos | ✅ Tabela mostra documentos com metadados |
-| Download funciona | ✅ Arquivo baixa corretamente |
-| Versionamento | ✅ Múltiplas versões são listadas |
-| Upload inválido rejeitado | ✅ Erro amigável exibido ao usuário |
-| Logs no CloudWatch | ✅ Execuções registradas sem erros |
+| Frontend carrega | âœ… PÃ¡gina exibe corretamente |
+| Upload de arquivo vÃ¡lido | âœ… Arquivo aparece em processados/ |
+| Processamento automÃ¡tico | âœ… Lambda move de entrada/ para processados/ |
+| Listagem de documentos | âœ… Tabela mostra documentos com metadados |
+| Download funciona | âœ… Arquivo baixa corretamente |
+| Versionamento | âœ… MÃºltiplas versÃµes sÃ£o listadas |
+| Upload invÃ¡lido rejeitado | âœ… Erro amigÃ¡vel exibido ao usuÃ¡rio |
+| Logs no CloudWatch | âœ… ExecuÃ§Ãµes registradas sem erros |
 
 ---
 
-## Etapa 18: Testar Classes de Armazenamento (Laboratório)
+## Etapa 18: Testar Classes de Armazenamento
 
-O prefixo `laboratorio/` existe para experimentar com classes de armazenamento S3 sem afetar os documentos reais. Aqui você aprenderá a fazer upload direto especificando a classe de armazenamento.
+O prefixo `laboratorio/` existe para experimentar com classes de armazenamento S3 sem afetar os documentos reais. Aqui vocÃª farÃ¡ upload direto especificando a classe de armazenamento desejada.
 
-> **IMPORTANTE:** Transições via Lifecycle demoram até 48h. Para testar classes de armazenamento imediatamente, faremos upload direto com a classe desejada via Console S3.
+> **IMPORTANTE:** TransiÃ§Ãµes via Lifecycle demoram atÃ© 48h. Para testar classes de armazenamento imediatamente, faremos upload direto com a classe desejada via Console S3.
 
 ---
 
-### 18.1 — Upload com classe Standard (padrão)
+### 18.1 â€” Upload com classe Standard (padrÃ£o)
 
 1. No Console S3, acesse o bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
-2. Navegue até `laboratorio/standard/`
+2. Navegue atÃ© `laboratorio/standard/`
 3. Clique em **Upload**
-4. Clique em **Add files** → Selecione um arquivo de teste (ex: `teste-standard.txt`)
-5. **NÃO** precisa alterar nenhuma propriedade (Standard é o padrão)
+4. Clique em **Add files** â†’ Selecione um arquivo de teste (ex: `teste-standard.txt`)
+5. **NÃƒO** precisa alterar nenhuma propriedade (Standard Ã© o padrÃ£o)
 6. Clique em **Upload**
-7. **Verificação:** Clique no objeto → em **Properties**, o campo **Storage class** mostra `Standard`
+7. **VerificaÃ§Ã£o:** Clique no objeto â†’ em **Properties**, o campo **Storage class** mostra `Standard`
 
 ---
 
-### 18.2 — Upload com Intelligent-Tiering
+### 18.2 â€” Upload com Intelligent-Tiering
 
-8. Navegue até `laboratorio/intelligent-tiering/`
+8. Navegue atÃ© `laboratorio/intelligent-tiering/`
 9. Clique em **Upload**
-10. Clique em **Add files** → Selecione um arquivo de teste (ex: `teste-it.txt`)
-11. Expanda a seção **Properties** (abaixo de "Add files")
+10. Clique em **Add files** â†’ Selecione um arquivo de teste (ex: `teste-it.txt`)
+11. Expanda a seÃ§Ã£o **Properties** (abaixo de "Add files")
 12. Na parte **Storage class**, selecione **Intelligent-Tiering**
 13. Clique em **Upload**
-14. **Verificação:** Clique no objeto → **Properties** → Storage class mostra `Intelligent-Tiering`
+14. **VerificaÃ§Ã£o:** Clique no objeto â†’ **Properties** â†’ Storage class mostra `Intelligent-Tiering`
 
-> **Sobre Intelligent-Tiering:** O S3 move automaticamente objetos entre camadas de acesso (Frequent, Infrequent, Archive) baseado em padrões de acesso. Objetos acessados frequentemente ficam em Standard; os menos acessados são movidos automaticamente para camadas mais baratas.
+> **Sobre Intelligent-Tiering:** O S3 move automaticamente objetos entre camadas de acesso (Frequent, Infrequent, Archive) baseado em padrÃµes de acesso. Objetos acessados frequentemente ficam em Standard; os menos acessados sÃ£o movidos automaticamente para camadas mais baratas.
 
 ---
 
-### 18.3 — Upload com Glacier Flexible Retrieval
+### 18.3 â€” Upload com Glacier Flexible Retrieval
 
-15. Navegue até `laboratorio/glacier-flexible/`
+15. Navegue atÃ© `laboratorio/glacier-flexible/`
 16. Clique em **Upload**
-17. Clique em **Add files** → Selecione um arquivo de teste (ex: `teste-glacier.txt`)
-18. Expanda a seção **Properties**
+17. Clique em **Add files** â†’ Selecione um arquivo de teste (ex: `teste-glacier.txt`)
+18. Expanda a seÃ§Ã£o **Properties**
 19. Na parte **Storage class**, selecione **Glacier Flexible Retrieval**
 20. Clique em **Upload**
-21. **Verificação:** Clique no objeto → **Properties** → Storage class mostra `Glacier Flexible Retrieval`
+21. **VerificaÃ§Ã£o:** Clique no objeto â†’ **Properties** â†’ Storage class mostra `Glacier Flexible Retrieval`
 
-> **IMPORTANTE:** Após o upload para Glacier, o objeto **NÃO pode ser baixado diretamente**. Tentar baixar resultará em erro. É necessário fazer uma **restauração** primeiro (veja 18.5).
+> **IMPORTANTE:** ApÃ³s o upload para Glacier, o objeto **NÃƒO pode ser baixado diretamente**. Tentar baixar resultarÃ¡ em erro. Ã‰ necessÃ¡rio fazer uma **restauraÃ§Ã£o** primeiro (veja 18.5).
 
 ---
 
-### 18.4 — Upload com Glacier Deep Archive
+### 18.4 â€” Upload com Glacier Deep Archive
 
-22. Navegue até `laboratorio/deep-archive/`
+22. Navegue atÃ© `laboratorio/deep-archive/`
 23. Clique em **Upload**
-24. Clique em **Add files** → Selecione um arquivo de teste (ex: `teste-deep-archive.txt`)
-25. Expanda a seção **Properties**
+24. Clique em **Add files** â†’ Selecione um arquivo de teste (ex: `teste-deep-archive.txt`)
+25. Expanda a seÃ§Ã£o **Properties**
 26. Na parte **Storage class**, selecione **Glacier Deep Archive**
 27. Clique em **Upload**
-28. **Verificação:** Clique no objeto → **Properties** → Storage class mostra `Glacier Deep Archive`
+28. **VerificaÃ§Ã£o:** Clique no objeto â†’ **Properties** â†’ Storage class mostra `Glacier Deep Archive`
 
-> **Sobre Deep Archive:** Classe mais barata para dados acessados muito raramente. A restauração leva de 12 a 48 horas (Standard tier). Ideal para backups de longo prazo e compliance.
+> **Sobre Deep Archive:** Classe mais barata para dados acessados muito raramente. A restauraÃ§Ã£o leva de 12 a 48 horas (Standard tier). Ideal para backups de longo prazo e compliance.
 
 ---
 
-### 18.5 — Testar Restauração de Objeto Glacier
+### 18.5 â€” Testar RestauraÃ§Ã£o de Objeto Glacier
 
 Vamos restaurar o objeto enviado para Glacier Flexible Retrieval.
 
 **Via Console S3:**
 
-29. Navegue até `laboratorio/glacier-flexible/`
-30. Selecione o checkbox ☐ ao lado de `teste-glacier.txt`
-31. Clique no menu **Actions** (Ações) → **Initiate restore** (Iniciar restauração)
+29. Navegue atÃ© `laboratorio/glacier-flexible/`
+30. Selecione o checkbox â˜ ao lado de `teste-glacier.txt`
+31. Clique no menu **Actions** (AÃ§Ãµes) â†’ **Initiate restore** (Iniciar restauraÃ§Ã£o)
 32. Preencha:
 
 | Campo | Valor |
 |-------|-------|
-| **Number of days** | `2` (dias que o objeto ficará disponível após restauração) |
+| **Number of days** | `2` (dias que o objeto ficarÃ¡ disponÃ­vel apÃ³s restauraÃ§Ã£o) |
 | **Retrieval tier** | **Standard** (3-5 horas para Glacier Flexible) |
 
 33. Clique em **Initiate restore**
 
 **Via Frontend (usando a API):**
 
-34. Se o objeto estivesse em `processados/`, você poderia usar o botão "Restaurar" na interface do Cofre Digital, que chama a Lambda `cofre-restaurar-documento`
+34. Se o objeto estivesse em `processados/`, vocÃª poderia usar o botÃ£o "Restaurar" na interface do Cofre Digital, que chama a Lambda `cofre-restaurar-documento`
 
-**Verificar status da restauração:**
+**Verificar status da restauraÃ§Ã£o:**
 
 35. Clique no objeto `teste-glacier.txt`
-36. Na seção **Properties**, procure por **Restore status**:
-    - `Restoration in progress` — Restauração em andamento (aguarde 3-5h para Glacier, 12-48h para Deep Archive)
-    - `Restored until [data]` — Objeto temporariamente disponível até a data indicada
+36. Na seÃ§Ã£o **Properties**, procure por **Restore status**:
+    - `Restoration in progress` â€” RestauraÃ§Ã£o em andamento (aguarde 3-5h para Glacier, 12-48h para Deep Archive)
+    - `Restored until [data]` â€” Objeto temporariamente disponÃ­vel atÃ© a data indicada
 
-**Após restauração concluída:**
+**ApÃ³s restauraÃ§Ã£o concluÃ­da:**
 
-37. Quando o status mudar para "Restored until...", você poderá baixar o objeto normalmente
-38. Após a data de expiração, o objeto voltará a ser inacessível (continua em Glacier)
+37. Quando o status mudar para "Restored until...", vocÃª poderÃ¡ baixar o objeto normalmente
+38. ApÃ³s a data de expiraÃ§Ã£o, o objeto voltarÃ¡ a ser inacessÃ­vel (continua em Glacier)
 
 ---
 
-### 18.6 — Tabela Comparativa de Classes
+### 18.6 â€” Tabela Comparativa de Classes
 
-| Classe | Uso típico | Restauração | Custo (relativo) |
+| Classe | Uso tÃ­pico | RestauraÃ§Ã£o | Custo (relativo) |
 |--------|-----------|-------------|-----------------|
 | Standard | Acesso frequente | Imediato | $$$ |
-| Intelligent-Tiering | Padrão de acesso desconhecido | Imediato | $$-$$$ (automático) |
+| Intelligent-Tiering | PadrÃ£o de acesso desconhecido | Imediato | $$-$$$ (automÃ¡tico) |
 | Glacier Flexible | Arquivamento com acesso eventual | 1-12 horas | $ |
-| Glacier Deep Archive | Arquivamento de longo prazo | 12-48 horas | ¢ |
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "InvalidObjectState" ao baixar | Objeto em Glacier sem restauração | Inicie a restauração primeiro |
-| Restauração demora demais | Normal para Deep Archive | Aguarde até 48h (Standard tier) |
-| "RestoreAlreadyInProgress" | Restauração já foi solicitada | Aguarde a conclusão |
+| Glacier Deep Archive | Arquivamento de longo prazo | 12-48 horas | Â¢ |
 
 ---
 
-## Seção Opcional: Substituir SSE-S3 por SSE-KMS
+## SeÃ§Ã£o Opcional: Substituir SSE-S3 por SSE-KMS
 
-Esta seção é **opcional** e destinada a quem deseja aprender sobre criptografia gerenciada pelo AWS KMS (Key Management Service). O SSE-S3 padrão já é suficiente para a maioria dos cenários.
+Esta seÃ§Ã£o Ã© **opcional** e destinada a quem deseja aprender sobre criptografia gerenciada pelo AWS KMS (Key Management Service). O SSE-S3 padrÃ£o jÃ¡ Ã© suficiente para a maioria dos cenÃ¡rios.
 
-### Quando usar SSE-KMS ao invés de SSE-S3?
+### Quando usar SSE-KMS ao invÃ©s de SSE-S3?
 
-| Cenário | Recomendação |
+| CenÃ¡rio | RecomendaÃ§Ã£o |
 |---------|-------------|
-| Projeto educacional ou pessoal | SSE-S3 (mais simples, sem custo adicional) |
-| Requisito de auditoria de uso da chave | SSE-KMS (cada uso é registrado no CloudTrail) |
+| Projeto pessoal ou de baixo risco | SSE-S3 (mais simples, sem custo adicional) |
+| Requisito de auditoria de uso da chave | SSE-KMS (cada uso Ã© registrado no CloudTrail) |
 | Controle granular de quem pode descriptografar | SSE-KMS (policies na chave KMS) |
-| Compliance (HIPAA, PCI-DSS) | SSE-KMS (rotação automática, segregação de acesso) |
+| Compliance (HIPAA, PCI-DSS) | SSE-KMS (rotaÃ§Ã£o automÃ¡tica, segregaÃ§Ã£o de acesso) |
 | Multi-conta (cross-account access) | SSE-KMS (permite compartilhar chave entre contas) |
 
-### Diferenças principais
+### DiferenÃ§as principais
 
-| Característica | SSE-S3 | SSE-KMS |
+| CaracterÃ­stica | SSE-S3 | SSE-KMS |
 |---------------|--------|---------|
-| Gerenciamento da chave | AWS gerencia tudo | Você controla ou AWS gerencia |
-| Custo da chave | Gratuito | $1/mês por chave + $0.03 por 10.000 requisições |
-| Auditoria | Básica | Completa via CloudTrail |
-| Rotação | Automática (interna) | Automática anual (configurável) |
-| Limite de requisições | Sem limite | Cota de API KMS (5.500-30.000 req/s por região) |
+| Gerenciamento da chave | AWS gerencia tudo | VocÃª controla ou AWS gerencia |
+| Custo da chave | Gratuito | $1/mÃªs por chave + $0.03 por 10.000 requisiÃ§Ãµes |
+| Auditoria | BÃ¡sica | Completa via CloudTrail |
+| RotaÃ§Ã£o | AutomÃ¡tica (interna) | AutomÃ¡tica anual (configurÃ¡vel) |
+| Limite de requisiÃ§Ãµes | Sem limite | Cota de API KMS (5.500-30.000 req/s por regiÃ£o) |
 
 ---
 
@@ -2022,13 +1905,13 @@ Esta seção é **opcional** e destinada a quem deseja aprender sobre criptograf
 
 1. Na barra de busca superior, digite **KMS** e clique em **Key Management Service**
 2. No menu lateral, clique em **Customer managed keys** (Chaves gerenciadas pelo cliente)
-3. Verifique que a região é `us-east-1`
+3. Verifique que a regiÃ£o Ã© `us-east-1`
 4. Clique em **Create key** (Criar chave)
 5. Preencha:
 
 | Campo | Valor |
 |-------|-------|
-| **Key type** | `Symmetric` (Simétrica) |
+| **Key type** | `Symmetric` (SimÃ©trica) |
 | **Key usage** | `Encrypt and decrypt` |
 
 6. Clique em **Next**
@@ -2038,11 +1921,11 @@ Esta seção é **opcional** e destinada a quem deseja aprender sobre criptograf
 |-------|-------|
 | **Alias** | `cofre-digital-kms-key` |
 | **Description** | `Chave KMS para criptografia dos documentos do Cofre Digital` |
-| **Tags** | Key: `projeto` → Value: `cofre-digital` |
+| **Tags** | Key: `projeto` â†’ Value: `cofre-digital` |
 
 8. Clique em **Next**
 9. Na tela "Define key administrative permissions":
-   - Selecione seu usuário IAM (admin-cofre-digital ou o usuário logado)
+   - Selecione seu usuÃ¡rio IAM (admin-cofre-digital ou o usuÃ¡rio logado)
    - Clique em **Next**
 10. Na tela "Define key usage permissions":
     - Selecione os roles das Lambdas que precisam descriptografar:
@@ -2062,7 +1945,7 @@ Esta seção é **opcional** e destinada a quem deseja aprender sobre criptograf
 
 13. No Console S3, clique no bucket **cofre-documentos-arquivos-<AWS_ACCOUNT_ID>**
 14. Clique na aba **Properties** (Propriedades)
-15. Role até **Default encryption** (Criptografia padrão)
+15. Role atÃ© **Default encryption** (Criptografia padrÃ£o)
 16. Clique em **Edit**
 17. Altere:
 
@@ -2077,9 +1960,9 @@ Esta seção é **opcional** e destinada a quem deseja aprender sobre criptograf
 
 ---
 
-### Passo 3: Atualizar políticas IAM das Lambdas
+### Passo 3: Atualizar polÃ­ticas IAM das Lambdas
 
-Para que as Lambdas possam ler/escrever objetos criptografados com KMS, adicione a seguinte permissão a TODAS as 6 políticas IAM (Etapa 5):
+Para que as Lambdas possam ler/escrever objetos criptografados com KMS, adicione a seguinte permissÃ£o a TODAS as 6 polÃ­ticas IAM (Etapa 5):
 
 ```json
 {
@@ -2093,56 +1976,48 @@ Para que as Lambdas possam ler/escrever objetos criptografados com KMS, adicione
 }
 ```
 
-**Para cada política:**
+**Para cada polÃ­tica:**
 
-19. Acesse **IAM** → **Policies** → Clique na política (ex: `cofre-policy-gerar-url-upload`)
+19. Acesse **IAM** â†’ **Policies** â†’ Clique na polÃ­tica (ex: `cofre-policy-gerar-url-upload`)
 20. Clique em **Edit** (Editar)
 21. Na aba JSON, adicione o statement acima dentro do array `Statement`
 22. Substitua o ARN da chave pelo valor real anotado no Passo 1
-23. Clique em **Next** → **Save changes**
-24. Repita para todas as 6 políticas
+23. Clique em **Next** â†’ **Save changes**
+24. Repita para todas as 6 polÃ­ticas
 
 ---
 
-### Verificação
+### VerificaÃ§Ã£o
 
-1. Faça upload de um novo arquivo via o Cofre Digital
+1. FaÃ§a upload de um novo arquivo via o Cofre Digital
 2. No Console S3, clique no objeto carregado
-3. Na aba **Properties**, a seção **Server-side encryption** deve mostrar:
+3. Na aba **Properties**, a seÃ§Ã£o **Server-side encryption** deve mostrar:
    - **Encryption type**: `aws:kms`
    - **AWS KMS key ARN**: O ARN da sua chave
-4. O download deve funcionar normalmente (descriptografia é transparente se a Lambda tem permissão)
-
-### Possíveis erros
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Access Denied" ao ler objetos | Lambda não tem permissão kms:Decrypt | Adicione permissão KMS na política IAM |
-| "KMS.AccessDeniedException" | Role não está na key policy | Adicione o role na key usage permissions do KMS |
-| Upload falha com "KMS" | Lambda não tem kms:GenerateDataKey | Adicione à política IAM |
+4. O download deve funcionar normalmente (descriptografia Ã© transparente se a Lambda tem permissÃ£o)
 
 ---
 
 ## Resumo de Recursos Criados
 
-Ao final deste guia, você terá criado os seguintes recursos na AWS:
+Ao final deste guia, vocÃª terÃ¡ criado os seguintes recursos na AWS:
 
-| # | Serviço | Recurso | Nome/Identificador |
+| # | ServiÃ§o | Recurso | Nome/Identificador |
 |---|---------|---------|-------------------|
 | 1 | S3 | Bucket de documentos | `cofre-documentos-arquivos-<AWS_ACCOUNT_ID>` |
 | 2 | S3 | Bucket do frontend | `cofre-documentos-frontend-<AWS_ACCOUNT_ID>` |
-| 3 | S3 | CORS (bucket documentos) | Configuração no bucket |
-| 4 | S3 | Bucket Policy HTTPS (documentos) | Configuração no bucket |
-| 5 | S3 | Bucket Policy CloudFront (frontend) | Configuração no bucket |
+| 3 | S3 | CORS (bucket documentos) | ConfiguraÃ§Ã£o no bucket |
+| 4 | S3 | Bucket Policy HTTPS (documentos) | ConfiguraÃ§Ã£o no bucket |
+| 5 | S3 | Bucket Policy CloudFront (frontend) | ConfiguraÃ§Ã£o no bucket |
 | 6 | S3 | Prefixos (entrada, processados, etc.) | Objetos vazios |
 | 7 | S3 | 3 regras de Lifecycle | No bucket de documentos |
 | 8 | S3 | Event Notification | `trigger-processar-documento` |
-| 9 | IAM | 6 políticas customizadas | `cofre-policy-*` |
+| 9 | IAM | 6 polÃ­ticas customizadas | `cofre-policy-*` |
 | 10 | IAM | 6 roles | `cofre-role-*` |
-| 11 | Lambda | 6 funções | `cofre-gerar-url-upload`, `cofre-processar-documento`, `cofre-listar-documentos`, `cofre-gerar-url-download`, `cofre-listar-versoes`, `cofre-restaurar-documento` |
+| 11 | Lambda | 6 funÃ§Ãµes | `cofre-gerar-url-upload`, `cofre-processar-documento`, `cofre-listar-documentos`, `cofre-gerar-url-download`, `cofre-listar-versoes`, `cofre-restaurar-documento` |
 | 12 | API Gateway | HTTP API | `cofre-digital-api` |
 | 13 | API Gateway | 5 rotas | POST /upload-url, GET /documentos, GET /download-url, GET /versoes, POST /restaurar |
-| 14 | CloudFront | Distribuição | `dXXXXXXXXXXXXX.cloudfront.net` |
+| 14 | CloudFront | DistribuiÃ§Ã£o | `dXXXXXXXXXXXXX.cloudfront.net` |
 | 15 | CloudFront | OAC | `cofre-frontend-oac` |
 | 16 | CloudWatch | 6 Log Groups | `/aws/lambda/cofre-*` (criados automaticamente) |
 
@@ -2150,26 +2025,26 @@ Ao final deste guia, você terá criado os seguintes recursos na AWS:
 
 ## Ordem Recomendada em Caso de Problemas
 
-Se algo não funcionar, verifique nesta ordem:
+Se algo nÃ£o funcionar, verifique nesta ordem:
 
-1. **Variáveis de ambiente** das Lambdas (nome do bucket está correto?)
-2. **Políticas IAM** (a Lambda tem permissão para a operação S3 necessária?)
-3. **CORS** (domínio do CloudFront está correto tanto no S3 quanto na API Gateway?)
+1. **VariÃ¡veis de ambiente** das Lambdas (nome do bucket estÃ¡ correto?)
+2. **PolÃ­ticas IAM** (a Lambda tem permissÃ£o para a operaÃ§Ã£o S3 necessÃ¡ria?)
+3. **CORS** (domÃ­nio do CloudFront estÃ¡ correto tanto no S3 quanto na API Gateway?)
 4. **Bucket Policy** (frontend bucket tem policy do CloudFront?)
-5. **Event Notification** (prefixo `entrada/` está correto?)
+5. **Event Notification** (prefixo `entrada/` estÃ¡ correto?)
 6. **CloudWatch Logs** (verifique erros detalhados)
 
 ---
 
-## Próximos Passos
+## PrÃ³ximos Passos
 
-Após completar a implantação:
+ApÃ³s completar a implantaÃ§Ã£o:
 
-1. 📖 Leia `TESTES.md` para cenários de teste detalhados
-2. 🔍 Consulte `TROUBLESHOOTING.md` se encontrar problemas
-3. 💰 Leia `CUSTOS.md` para entender os custos envolvidos
-4. 🧹 Quando terminar os estudos, siga `LIMPEZA.md` para remover todos os recursos e evitar cobranças
+1. ðŸ“– Leia `TESTES.md` para cenÃ¡rios de teste detalhados
+2. ðŸ” Consulte `TROUBLESHOOTING.md` se encontrar problemas
+3. ðŸ’° Leia `CUSTOS.md` para entender os custos envolvidos
+4. ðŸ§¹ Quando terminar os estudos, siga `LIMPEZA.md` para remover todos os recursos e evitar cobranÃ§as
 
 ---
 
-> **Parabéns!** 🎉 Se todos os testes da Etapa 17 passaram, seu Cofre Digital de Documentos está totalmente funcional. Explore, experimente e aprenda!
+> **ParabÃ©ns!** ðŸŽ‰ Se todos os testes da Etapa 17 passaram, seu Cofre Digital de Arquivos estÃ¡ totalmente funcional.

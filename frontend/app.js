@@ -1,5 +1,5 @@
 /**
- * Cofre Digital de Documentos — Lógica da Aplicação
+ * Cofre Digital de Arquivos — Lógica da Aplicação
  * 
  * Gerencia upload, listagem, download, versões e restauração
  * de documentos via API Gateway + Lambda + S3.
